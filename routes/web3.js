@@ -9,7 +9,7 @@ router.get(
   "/test",
   // loginLimiter,
   // validate(userValidator.register),
-  web3Controller.testing
+  web3Controller.watch
 );
 
 module.exports = router;
