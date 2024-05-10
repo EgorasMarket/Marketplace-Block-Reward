@@ -1,0 +1,51 @@
+name: Main.js CI
+
+
+on:
+  push:
+    branches: [ deploy]
+  pull_request:
+    branches: [ deploy]
+
+jobs:
+  build:
+    runs-on: self-hosted
+  
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+  
+    # - run: npm install express-rate-limit
+    # - run: npm install express-rate-limit
+  # comment
+    
+
+    - name: 'Create env file'
+      run: |
+          echo whoami
+          # cp -R /var/www/dataseed-node-modules/node_modules /var/www/sandbox.egoras.com/actions-runner/_work/EgoPay-Staging/EgoPay-Staging/
+          cp -R /var/www/dataseed-node-modules/node_modules /var/www/saltlake.egoras.com/actions-runner/_work/Salt-Lake-Backend/Salt-Lake-Backend/
+          npm install
+          touch .env
+          echo DB_HOST=${{secrets.DB_HOST}} >> .env
+          echo DB_USER=${{secrets.DB_USER}} >> .env
+          echo DB_PASS=${{secrets.DB_PASS}} >> .env
+          echo DB_NAME=${{secrets.DB_NAME}} >> .env
+          echo DB_DIALECT=${{secrets.DB_DIALECT}} >> .env
+          echo DB_PORT=${{secrets.DB_PORT}} >> .env
+          echo APP_HOST=${{secrets.APP_HOST}} >> .env
+          echo APP_PORT=${{secrets.APP_PORT}} >> .env
+
+
+          # pm2 restart 5
+          
+    # - name: 'Restart server'
+    #   run: |
+    #       pm2 restart all
+         
+         
+
+         
+          

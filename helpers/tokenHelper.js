@@ -1,0 +1,6 @@
+//map token by address
+
+exports.TokenHelper = {
+  WEGAX: "0x7e38B6d9c6074F259F213BBA2Bbf6B74d96fcE6A",
+  USDE: "0x59135ECF9Be79324403F9549ddFD6282c8705F5C",
+};

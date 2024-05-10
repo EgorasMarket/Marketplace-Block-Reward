@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Error</title>
+  </head>
+  <body>
+    <h1>Error <%= statusCode %></h1>
+    <p><%= message %></p>
+    <% if (app.get('env') === 'development') { %>
+    <pre><%= error %></pre>
+    <% } %>
+  </body>
+</html>
