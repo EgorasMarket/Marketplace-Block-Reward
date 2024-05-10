@@ -1,4 +1,16 @@
-const { errorResponse, successResponse } = require("../../helpers");
+const {
+  errorResponse,
+  successResponse,
+  checkBalance,
+  tx,
+  nt,
+  add,
+  Depoxit,
+  UpdatBridge,
+  deduct,
+  uniqueId,
+} = require("../../helpers");
+const db = require("../../config/sequelize");
 
 const axios = require("axios").default;
 const { Asset, Wallet, Watch, Deposit } = require("../../models/index");
@@ -139,58 +151,57 @@ exports.watch = async (req, res) => {
             );
             let blockNumber = await web3.eth.getBlockNumber();
 
-            console.log(returned_event.data.result, "KXXXD");
+            // console.log(returned_event.data.result, "KXXXD");
 
-            if (returned_event.length > 0) {
-              if (returned_event.tokenSymbol === "NGNct") {
-                returned_event.forEach(async (deposit) => {
+            if (returned_event.data.result.length > 0) {
+              returned_event.data.result.forEach(async (deposit) => {
+                if (deposit.tokenSymbol === "NGNct") {
+                  console.log("KKKOOLL");
                   await db.sequelize.transaction(async (addDeposit) => {
                     if (
-                      deposit.returnValues.to.toLowerCase() ==
-                      watch.address.toLowerCase()
+                      deposit.to.toLowerCase() == watch.address.toLowerCase()
                     ) {
                       let findDepositHash = await Deposit.findOne({
-                        where: { hash: deposit.transactionHash },
+                        where: { hash: deposit.hash },
                       });
                       if (!findDepositHash) {
                         let amount =
-                          parseInt(deposit.returnValues.value) /
-                          1000000000000000000;
+                          parseInt(deposit.value) / 1000000000000000000;
                         let addFund = await add(
                           watch.email,
                           watch.symbol,
                           "portfolio",
                           "value",
-                          watch.amount,
+                          amount,
                           addDeposit
                         );
                         const enterHash = await Deposit.create(
                           {
-                            hash: deposit.transactionHash,
-                            blockchain: blockchain,
+                            hash: deposit.hash,
+                            blockchain: watch.blockchain,
                           },
                           { transaction: addDeposit }
                         );
 
                         let ntPayload = {
-                          email: email,
+                          email: watch.email,
                           meta: {
                             symbol: watch.symbol,
-                            amount: watch.amount.toString(),
+                            amount: amount.toString(),
                             type: "deposit",
                           },
                         };
-                        let createNt = await nt(ntPayload, addDeposit);
+                        // let createNt = await nt(ntPayload, addDeposit);
 
                         let txPayload = {
                           email: watch.email,
                           to_email: watch.email,
                           meta: {
                             symbol: watch.symbol,
-                            txh: deposit.transactionHash,
+                            txh: deposit.hash,
                             confirmation: "3/3",
                             network: "BNB Smart Chain (BEP20)",
-                            wallet_address: deposit.returnValues.to,
+                            wallet_address: deposit.to,
                           },
 
                           amount: amount,
@@ -200,12 +211,14 @@ exports.watch = async (req, res) => {
                         let createTx = await tx(txPayload, addDeposit);
                         let updateWatch = await Watch.update(
                           { block: deposit.blockNumber },
-                          { where: { symbol, email: email } }
+                          {
+                            where: { symbol: watch.symbol, email: watch.email },
+                          }
                         );
                         if (
                           !addFund[0][1] &&
                           !enterHash &&
-                          !createNt[0][1] &&
+                          // !createNt[0][1] &&
                           !createTx[0][1] &&
                           !updateWatch[0][1]
                         ) {
@@ -240,17 +253,17 @@ exports.watch = async (req, res) => {
                       throw new Error("kkkkj");
                     }
                   });
-                });
-              }
+                }
+              });
             } else {
-              if (parseInt(block) + 4899 > blockNumber) {
+              if (parseInt(watch.block) + 4899 > blockNumber) {
                 await Watch.update(
                   { block: blockNumber },
                   { where: { symbol: watch.symbol, email: watch.email } }
                 );
               } else {
                 await Watch.update(
-                  { block: parseInt(block) + 4899 },
+                  { block: parseInt(watch.block) + 4899 },
                   { where: { symbol: watch.symbol, email: watch.email } }
                 );
               }
