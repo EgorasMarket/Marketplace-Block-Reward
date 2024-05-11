@@ -65,9 +65,10 @@ exports.getPortfolios = async (req, res) => {
 };
 
 exports.fetchTransactionHistory = async (req, res) => {
+  console.log(req.query.page, req.query.limit, "Kkkkkk");
   try {
-    const page = req.params.page > 0 ? req.params.page : 1;
-    const limit = parseInt(req.params.limit);
+    const page = req.query.page > 0 ? req.query.page : 1;
+    const limit = parseInt(req.query.limit);
     const offset = (page - 1) * limit;
     let user = req.user.email;
     let query = `call sp_getHistory('${user}', ${offset}, ${limit})`;
@@ -75,6 +76,7 @@ exports.fetchTransactionHistory = async (req, res) => {
 
     return successResponse(req, res, result);
   } catch (error) {
+    console.log(error);
     return errorResponse(req, res, error.message);
   }
 };

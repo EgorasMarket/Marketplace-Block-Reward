@@ -6,7 +6,7 @@ const validate = require("express-validation");
 const portfolioController = require("../controllers/portfolio/portfolio.controller");
 const { loginLimiter } = require("../middleware/rateLimitMiddleware");
 
-router.post(
+router.get(
   "/get/transaction/history",
   //   loginLimiter,
   // validate(userValidator.register),
