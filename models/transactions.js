@@ -2,6 +2,7 @@
 module.exports = (sequelize, DataTypes) => {
   const Transactions = sequelize.define(
     "Transactions",
+    // hello
     {
       email: DataTypes.STRING,
       to_email: DataTypes.STRING,
