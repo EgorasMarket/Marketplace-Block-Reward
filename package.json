@@ -2,6 +2,7 @@
   "name": "xbm-paiban",
   "version": "0.0.0",
   "private": true,
+  "main": "index.js",
   "scripts": {
     "start": "./node_modules/.bin/supervisor app.js",
     "test": "./node_modules/.bin/mocha -u bdd"

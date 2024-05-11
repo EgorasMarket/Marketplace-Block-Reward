@@ -2,10 +2,12 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { Op } = require("sequelize");
-const { v4 = uuidv4 } = require("uuid");
+const { v4 } = require("uuid");
+const uuidv4 = v4;
+
 const {
   User,
-  newActivity,
+  userActivity,
   ReferralCode,
   ReferralList,
 } = require("../../models");
@@ -32,6 +34,34 @@ const instance = axiosCustom.create({
     Accept: "application/json",
   },
 });
+
+exports.newActivity = async ({
+  user_email,
+  message,
+  status,
+  type = activity_tunnel.user,
+  tunnel,
+}) => {
+  try {
+    await userActivity.create({
+      user_email,
+      message,
+      status,
+      call_type: type,
+      tunnel,
+    });
+
+    return {
+      success: true,
+      message: "successful",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
 
 exports.registerWallet = async (req, res) => {
   let t;
@@ -116,7 +146,7 @@ exports.register = async (req, res) => {
     });
 
     if (user) {
-      await newActivity({
+      await this.newActivity({
         user_email: email,
         message: "Tried to Create another account with same email",
         status: activity_status.failure,
@@ -126,7 +156,7 @@ exports.register = async (req, res) => {
       throw new Error("User already exists with same email");
     }
     if (userUsername) {
-      await newActivity({
+      await this.newActivity({
         user_email: email,
         message: ` ${email} attempted signing up with username: ${username} that is already in use`,
         status: activity_status.failure,
@@ -136,7 +166,7 @@ exports.register = async (req, res) => {
       throw new Error("User already exists with same username");
     }
     if (userPhone) {
-      await newActivity({
+      await this.newActivity({
         user_email: email,
         message: ` ${email} attempted signing up with phone Number: ${phone} that is already in use`,
         status: activity_status.failure,
@@ -178,7 +208,7 @@ exports.register = async (req, res) => {
       pin_length: 6,
       // OPT is Generated From Termii
       pin_placeholder: "< 000000 >",
-      message_text: `Hi ${firstName} < 000000 > is your verification code Egoras Technologies Limited.`,
+      message_text: `Hi ${email} < 000000 > is your verification code Egoras Technologies Limited.`,
       // END
 
       pin_type: "NUMERIC",
@@ -203,14 +233,9 @@ exports.register = async (req, res) => {
 
     const payload = {
       email,
-      firstName,
-      lastName,
       username,
       phone,
       countrycode,
-      referral,
-      gender,
-      dateOfBirth,
       emailId,
       password: reqPass,
       isVerified: countrycode == "+234" ? false : true,
@@ -233,7 +258,7 @@ exports.register = async (req, res) => {
     }
     // end of add referral
     if (newUser) {
-      await newActivity({
+      await this.newActivity({
         user_email: email,
         message: ` ${email} have successfully Signed Up`,
         status: activity_status.success,
@@ -258,7 +283,7 @@ exports.login = async (req, res) => {
       where: { email: req.body.email },
     });
     if (!user) {
-      await newActivity({
+      await this.newActivity({
         user_email: req.body.email,
         message: "Failed Login Attempt: Reason: Incorrect Email Id/Password",
         status: activity_status.failure,
@@ -269,7 +294,7 @@ exports.login = async (req, res) => {
     }
     const match = await bcrypt.compare(req.body.password, user.password);
     if (!match) {
-      await newActivity({
+      await this.newActivity({
         user_email: req.body.email,
         message: "Failed Login Attempt: Reason: Incorrect password",
         status: activity_status.failure,
@@ -290,7 +315,7 @@ exports.login = async (req, res) => {
     // await Devices.create(payload);
 
     if (!user.isVerified) {
-      await newActivity({
+      await this.newActivity({
         user_email: req.body.email,
         message: `Failed Login Attempt. Reason: ${req.body.email} have not verified phone number `,
         status: activity_status.failure,
@@ -302,7 +327,7 @@ exports.login = async (req, res) => {
 
     if (host !== "") {
       if (user.has2fa && user.user_pin != null) {
-        await newActivity({
+        await this.newActivity({
           user_email: req.body.email,
           message: `Failed Login Attempt. Reason:  2FA is required `,
           status: activity_status.failure,
@@ -324,7 +349,7 @@ exports.login = async (req, res) => {
       process.env.SECRET
     );
     delete user.dataValues.password;
-    await newActivity({
+    await this.newActivity({
       user_email: req.body.email,
       message: `Successful Login attempt `,
       status: activity_status.success,
@@ -334,9 +359,10 @@ exports.login = async (req, res) => {
 
     return successResponse(req, res, { user, token });
   } catch (error) {
-    await newActivity({
+    await this.newActivity({
       user_email: req.body.email,
       message: `Failed Login Attempt. Reason: ${error.message}`,
+
       status: activity_status.failure,
       tunnel: activity_tunnel.user,
       type: "Authentication",

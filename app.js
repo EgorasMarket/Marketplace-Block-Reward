@@ -7,6 +7,7 @@ const cors = require("cors");
 const path = require("path");
 const users = require("./routes/users");
 const cryptoevents = require("./routes/cryptoevents");
+const apiMiddleware = require("./middleware/apiAuth");
 
 dotenv.config({ path: ".env" }); // Load .env file
 
@@ -48,7 +49,8 @@ app.use(
 app.use(bodyParser.json());
 
 // Route definitions
-app.use("/user", users);
+app.use("/api", apiMiddleware, users);
+app.use("/pub", require("./routes/pub"));
 app.use("/web3", require("./routes/web3"));
 
 // Not Found error handler
@@ -56,6 +58,13 @@ app.use((req, res, next) => {
   const err = new Error("Not Found");
   err.status = 404;
   next(err);
+});
+app.use(function (err, req, res, next) {
+  if (err instanceof ValidationError) {
+    return res.status(err.statusCode).json(err);
+  }
+
+  return res.status(500).json(err);
 });
 
 // Error handlers

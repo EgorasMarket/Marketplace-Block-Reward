@@ -78,8 +78,6 @@ exports.checkBalance = async (email, amount, symbol) => {
     },
   });
 
-  // console.log(userPortfolio);
-
   return userPortfolio;
 };
 

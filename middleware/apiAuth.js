@@ -50,4 +50,4 @@ const apiAuth = async (req, res, next) => {
   }
 };
 
-export default apiAuth;
+module.exports = apiAuth;
