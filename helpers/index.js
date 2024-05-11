@@ -11,6 +11,7 @@ const {
   Deposit,
   Bridge,
 } = require("../models");
+
 const Sequelize = require("sequelize");
 const db = require("../config/sequelize");
 const Op = Sequelize.Op;

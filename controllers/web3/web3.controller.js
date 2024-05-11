@@ -1,7 +1,19 @@
-const { errorResponse, successResponse } = require("../../helpers");
+const {
+  errorResponse,
+  successResponse,
+  checkBalance,
+  tx,
+  nt,
+  add,
+  Depoxit,
+  UpdatBridge,
+  deduct,
+  uniqueId,
+} = require("../../helpers");
+const db = require("../../config/sequelize");
 
 const axios = require("axios").default;
-const { Asset, Wallet, Watch } = require("../../models/index");
+const { Asset, Wallet, Watch, Deposit } = require("../../models/index");
 require("dotenv").config();
 const Web3 = require("web3");
 var egochain_provider = "https://mainnet.egochain.org";
@@ -27,7 +39,7 @@ exports.fetchNewTokenDeposit = async (req, res) => {
     console.log("llls");
     const { contract, address, block } = req.body;
     console.log(req.body);
-    var instance = new web3.eth.Contract(abi, contract);
+    var instance = new web3.eth.Contract(ngnc, contract);
 
     const options = {
       filter: {
@@ -45,6 +57,226 @@ exports.fetchNewTokenDeposit = async (req, res) => {
     });
   } catch (error) {
     console.log(error, "houjo");
+    return errorResponse(req, res, error.message);
+  }
+};
+
+exports.watch = async (req, res) => {
+  try {
+    const fifteenMinutesAgo = new Date(new Date() - 15 * 60 * 1000);
+
+    let watches = await Watch.findAll({
+      // where: {
+      //   symbol: {
+      //     [Op.notIn]: ["BTC", "EGC", "EGAX", "USDT"],
+      //   },
+      //   // updatedAt: {
+      //   //   [Op.lte]: fifteenMinutesAgo,
+      //   // },
+      // },
+      order: [
+        ["id", "DESC"],
+        ["updatedAt", "DESC"],
+      ],
+    });
+
+    // console.log("MMM");
+    let mainWatches = [];
+
+    if (watches) {
+      const promises = watches.map(async (watch) => {
+        let asset = await Asset.findOne({ where: { symbol: watch.symbol } });
+
+        // console.log(asset, "ddd");
+
+        if (asset) {
+          mainWatches.push({
+            address: watch.address,
+            email: watch.email,
+            symbol: watch.symbol,
+            block: watch.block,
+            blockchain: asset.blockchain,
+            contract: asset.contract,
+            isBase: asset.isBase,
+          });
+        }
+      });
+
+      // Wait for all promises to resolve
+      await Promise.all(promises);
+    }
+
+    let chunkSize = 30;
+    let groupedArrays = [];
+
+    for (let i = 0; i < mainWatches.length; i += chunkSize) {
+      let chunk = mainWatches.slice(i, i + chunkSize);
+      groupedArrays.push(chunk);
+    }
+
+    groupedArrays.map((firstLoop, index) => {
+      // console.log("kklll");
+      setTimeout(async () => {
+        console.log("Iteration", index + 1);
+        firstLoop.forEach(async (watch) => {
+          if (watch.isBase != undefined && watch.isBase == true) {
+            console.log("LLLLLL");
+          } else {
+            // await binanceToken(
+            //   watch.address,
+            //   watch.email,
+            //   watch.symbol,
+            //   watch.block,
+            //   watch.blockchain,
+            //   watch.contract
+            // );
+
+            // console.log(watch);
+
+            // var instance = new web3.eth.Contract(ngnc, watch.contract);
+
+            // const options = {
+            //   filter: {
+            //     to: watch.address,
+            //   },
+            //   fromBlock: parseInt(watch.block) + 1,
+            //   toBlock: parseInt(watch.block) + 3000,
+            // };
+            // let returned_event = [];
+            // returned_event = await instance.getPastEvents("Transfer", options);
+            let returned_event = await instance2.get(
+              "api?module=account&action=tokentx&address=" +
+                watch.address +
+                "&page=1&offset=1000"
+            );
+            let blockNumber = await web3.eth.getBlockNumber();
+
+            // console.log(returned_event.data.result, "KXXXD");
+
+            if (returned_event.data.result.length > 0) {
+              returned_event.data.result.forEach(async (deposit) => {
+                if (deposit.tokenSymbol === "NGNct") {
+                  console.log("KKKOOLL");
+                  await db.sequelize.transaction(async (addDeposit) => {
+                    if (
+                      deposit.to.toLowerCase() == watch.address.toLowerCase()
+                    ) {
+                      let findDepositHash = await Deposit.findOne({
+                        where: { hash: deposit.hash },
+                      });
+                      if (!findDepositHash) {
+                        let amount =
+                          parseInt(deposit.value) / 1000000000000000000;
+                        let addFund = await add(
+                          watch.email,
+                          watch.symbol,
+                          "portfolio",
+                          "value",
+                          amount,
+                          addDeposit
+                        );
+                        const enterHash = await Deposit.create(
+                          {
+                            hash: deposit.hash,
+                            blockchain: watch.blockchain,
+                          },
+                          { transaction: addDeposit }
+                        );
+
+                        let ntPayload = {
+                          email: watch.email,
+                          meta: {
+                            symbol: watch.symbol,
+                            amount: amount.toString(),
+                            type: "deposit",
+                          },
+                        };
+                        // let createNt = await nt(ntPayload, addDeposit);
+
+                        let txPayload = {
+                          email: watch.email,
+                          to_email: watch.email,
+                          meta: {
+                            symbol: watch.symbol,
+                            txh: deposit.hash,
+                            confirmation: "3/3",
+                            network: "BNB Smart Chain (BEP20)",
+                            wallet_address: deposit.to,
+                          },
+
+                          amount: amount,
+                          type: "DEPOSIT",
+                          status: "SUCCESS",
+                        };
+                        let createTx = await tx(txPayload, addDeposit);
+                        let updateWatch = await Watch.update(
+                          { block: deposit.blockNumber },
+                          {
+                            where: { symbol: watch.symbol, email: watch.email },
+                          }
+                        );
+                        if (
+                          !addFund[0][1] &&
+                          !enterHash &&
+                          // !createNt[0][1] &&
+                          !createTx[0][1] &&
+                          !updateWatch[0][1]
+                        ) {
+                          addDeposit.rollback();
+                        } else {
+                          // let userPayload = await User.findOne({
+                          //   where: { email: watch.email },
+                          // });
+                          // if (userPayload) {
+                          //   var dynamic_template_data = {
+                          //     amount: amount,
+                          //     symbol: symbol,
+                          //     subject: "Egoras Deposit Confirmation",
+                          //     name:
+                          //       userPayload.firstName +
+                          //       ", " +
+                          //       userPayload.lastName,
+                          //   };
+                          //   sendTemplate(
+                          //     email,
+                          //     process.env.FROM,
+                          //     process.env.DEPOSIT_TEMPLATE_ID,
+                          //     dynamic_template_data
+                          //   );
+                          //   //  throw new Error('');
+                          // } else {
+                          //   throw new Error("mmm");
+                          // }
+                        }
+                      }
+                    } else {
+                      throw new Error("kkkkj");
+                    }
+                  });
+                }
+              });
+            } else {
+              if (parseInt(watch.block) + 4899 > blockNumber) {
+                await Watch.update(
+                  { block: blockNumber },
+                  { where: { symbol: watch.symbol, email: watch.email } }
+                );
+              } else {
+                await Watch.update(
+                  { block: parseInt(watch.block) + 4899 },
+                  { where: { symbol: watch.symbol, email: watch.email } }
+                );
+              }
+
+              //update block
+            }
+          }
+        });
+      }, 5000);
+    });
+
+    return successResponse(req, res, {});
+  } catch (error) {
     return errorResponse(req, res, error.message);
   }
 };
