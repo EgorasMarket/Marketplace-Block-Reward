@@ -3,7 +3,7 @@ const { User, Staff } = require("../models");
 
 const jwt = require("jsonwebtoken");
 
-const apiAuth = async (req, res, next) => {
+exports.apiAuth = async (req, res, next) => {
   if (!(req.headers && req.headers["x-token"])) {
     return errorResponse(req, res, "Token is not provided", 401);
   }
@@ -50,4 +50,4 @@ const apiAuth = async (req, res, next) => {
   }
 };
 
-export default apiAuth;
+// export default apiAuth;

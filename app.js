@@ -7,6 +7,9 @@ const cors = require("cors");
 const path = require("path");
 const users = require("./routes/users");
 const cryptoevents = require("./routes/cryptoevents");
+const portfolio = require("./routes/portfolio");
+
+const apiMiddleware = require("./middleware/apiAuth");
 
 dotenv.config({ path: ".env" }); // Load .env file
 
@@ -49,6 +52,7 @@ app.use(bodyParser.json());
 
 // Route definitions
 app.use("/user", users);
+app.use("/portfolio", apiMiddleware.apiAuth, portfolio);
 app.use("/web3", require("./routes/web3"));
 
 // Not Found error handler

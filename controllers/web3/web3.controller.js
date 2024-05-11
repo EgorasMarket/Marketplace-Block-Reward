@@ -12,8 +12,29 @@ const {
 } = require("../../helpers");
 const db = require("../../config/sequelize");
 
+const cron = require("node-cron");
+
 const axios = require("axios").default;
-const { Asset, Wallet, Watch, Deposit } = require("../../models/index");
+const instance = axios.create({
+  baseURL: process.env.COINGECKO_API_ENDPOINT,
+  timeout: 15000,
+
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+});
+
+// const axios = require("axios").default;
+const {
+  Wallet,
+  Watch,
+  Deposit,
+  Asset,
+  // Coingecko,
+  PriceOracle,
+  LiquidityPoolBalance,
+} = require("../../models/index");
 require("dotenv").config();
 const Web3 = require("web3");
 var egochain_provider = "https://mainnet.egochain.org";
@@ -502,5 +523,75 @@ exports.testing = async (req, res) => {
     errorResponse(req, res, error.response || error.message);
   }
 };
+
+cron.schedule(
+  "* * * * *",
+  async (req, res) => {
+    console.log("Fetching egax Price");
+    console.log("ddd");
+    try {
+      //check if the egoras price row exist in coin geko table
+      const getEGcCOinConfig = await PriceOracle.findOne({
+        where: {
+          ids: "egax",
+        },
+      });
+
+      //set parameters to create one if it does not exist
+
+      const ids = "egax";
+      const vs_currencies = "usd";
+      const include_24hr_change = "true";
+      const include_market_cap = "false";
+      const include_24hr_vol = "false";
+      const include_last_updated_at = "true";
+
+      //create an entry if the egoras ticker doesn't exist
+      if (!getEGcCOinConfig) {
+        await PriceOracle.create({
+          ids,
+          vs_currencies,
+          include_24hr_change,
+          include_market_cap,
+          include_24hr_vol,
+          include_last_updated_at,
+        });
+      }
+
+      const getLiquidityAmount = await LiquidityPoolBalance.findOne({
+        where: {
+          tokenASymbol: "USD",
+          tokenBSymbol: "EGAX",
+        },
+      });
+
+      console.log(getLiquidityAmount.tokenA, getLiquidityAmount.tokenB);
+
+      let finalAmount =
+        parseFloat(getLiquidityAmount.tokenA) /
+        parseFloat(getLiquidityAmount.tokenB);
+
+      await PriceOracle.update(
+        {
+          price: finalAmount.toFixed(3),
+        },
+        {
+          where: {
+            ids,
+          },
+        }
+      );
+      // return successResponse(req, res, {});
+      return;
+    } catch (error) {
+      console.log(error);
+      return errorResponse(req, res, error.message, 500, error);
+    }
+  },
+  {
+    scheduled: true,
+  }
+);
+
 exports.mint = async ({ amount, address }) => {};
 exports.burn = async ({ amount, address }) => {};
