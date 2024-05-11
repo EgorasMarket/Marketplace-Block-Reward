@@ -26,7 +26,7 @@ jobs:
       run: |
           echo whoami
           # cp -R /var/www/dataseed-node-modules/node_modules /var/www/sandbox.egoras.com/actions-runner/_work/EgoPay-Staging/EgoPay-Staging/
-          cp -R /var/www/dataseed-node-modules/node_modules /var/www/saltlake.egoras.com/actions-runner/_work/Salt-Lake-Backend/Salt-Lake-Backend/
+          # cp -R /var/www/dataseed-node-modules/node_modules /var/www/saltlake.egoras.com/actions-runner/_work/Salt-Lake-Backend/Salt-Lake-Backend/
           npm install
           touch .env
           echo DB_HOST=${{secrets.DB_HOST}} >> .env
