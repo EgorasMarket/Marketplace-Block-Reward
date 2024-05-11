@@ -3,9 +3,9 @@ name: Main.js CI
 
 on:
   push:
-    branches: [ Ebrinix]
+    branches: [deploy]
   pull_request:
-    branches: [ Ebrinix]
+    branches: [deploy]
 
 jobs:
   build:

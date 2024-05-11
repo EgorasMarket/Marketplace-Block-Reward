@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const validate = require("express-validation");
+const { validate, ValidationError, Joi } = require("express-validation");
 
 const userValidator = require("../controllers/user/user.validator");
 const userController = require("../controllers/user/user.controller");
