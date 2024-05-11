@@ -8,6 +8,7 @@ const path = require("path");
 const users = require("./routes/users");
 const cryptoevents = require("./routes/cryptoevents");
 const portfolio = require("./routes/portfolio");
+const web3 = require("./routes/web3");
 
 const apiMiddleware = require("./middleware/apiAuth");
 
@@ -55,20 +56,13 @@ app.use("/user", users);
 app.use("/portfolio", apiMiddleware.apiAuth, portfolio);
 app.use("/api", apiMiddleware.apiAuth, users);
 app.use("/pub", require("./routes/pub"));
-app.use("/web3", require("./routes/web3"));
+app.use("/web3", web3);
 
 // Not Found error handler
 app.use((req, res, next) => {
   const err = new Error("Not Found");
   err.status = 404;
   next(err);
-});
-app.use(function (err, req, res, next) {
-  if (err instanceof ValidationError) {
-    return res.status(err.statusCode).json(err);
-  }
-
-  return res.status(500).json(err);
 });
 
 // Error handlers
