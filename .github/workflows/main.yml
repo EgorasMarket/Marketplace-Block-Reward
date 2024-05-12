@@ -3,9 +3,9 @@ name: Main.js CI
 
 on:
   push:
-    branches: [ Ebrinix]
+    branches: [deploy]
   pull_request:
-    branches: [ Ebrinix]
+    branches: [deploy]
 
 jobs:
   build:
@@ -17,6 +17,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
   
+    # - run: npm install 
     # - run: npm install express-rate-limit
     # - run: npm install express-rate-limit
   # comment
@@ -26,7 +27,7 @@ jobs:
       run: |
           echo whoami
           # cp -R /var/www/dataseed-node-modules/node_modules /var/www/sandbox.egoras.com/actions-runner/_work/EgoPay-Staging/EgoPay-Staging/
-          cp -R /var/www/dataseed-node-modules/node_modules /var/www/saltlake.egoras.com/actions-runner/_work/Salt-Lake-Backend/Salt-Lake-Backend/
+          # cp -R /var/www/dataseed-node-modules/node_modules /var/www/saltlake.egoras.com/actions-runner/_work/Salt-Lake-Backend/Salt-Lake-Backend/
           npm install
           touch .env
           echo DB_HOST=${{secrets.DB_HOST}} >> .env
@@ -36,7 +37,13 @@ jobs:
           echo DB_DIALECT=${{secrets.DB_DIALECT}} >> .env
           echo DB_PORT=${{secrets.DB_PORT}} >> .env
           echo APP_HOST=${{secrets.APP_HOST}} >> .env
-          echo APP_PORT=${{secrets.APP_PORT}} >> .env
+          echo PORT=${{secrets.PORT}} >> .env
+          echo IS_GOOGLE_AUTH_ENABLE=${{secrets.IS_GOOGLE_AUTH_ENABLE}} >> .env
+          echo TERMII_API_KEY=${{secrets.TERMII_API_KEY}} >> .env
+          echo TERMII_SEC_KEY=${{secrets.TERMII_SEC_KEY}} >> .env
+          echo SALTROUNDS=${{secrets.SALTROUNDS}} >> .env
+          echo SECRET=${{secrets.SECRET}} >> .env
+          echo WEB3_PROVIDER=${{secrets.WEB3_PROVIDER}} >> .env
 
 
           # pm2 restart 5
