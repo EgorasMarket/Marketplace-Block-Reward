@@ -4,8 +4,7 @@ const { validate, ValidationError, Joi } = require("express-validation");
 
 const userValidator = require("../controllers/user/user.validator");
 const userController = require("../controllers/user/user.controller");
-const withdrawController = require("../controllers/withdrawal/withdrawal.controller");
-const withdrawalValidator = require("../controllers/withdrawal/withdrawal.validator");
+const accountController = require("../controllers/account/account.controller");
 const {
   loginLimiter,
   transaction,
@@ -14,15 +13,9 @@ const transactionAuthMiddleware = require("../middleware/transactionAuthMiddlewa
 const validateRequest = require("../helpers/joi_validationRequest");
 
 router.post(
-  "/register",
+  "/user/generate/virtual/account",
   loginLimiter,
-  // validate(userValidator.register),
-  userController.register
+  accountController.getVirtualAccount
 );
-router.post(
-  "/login",
-  loginLimiter,
-  // validate(userValidator.login),
-  userController.login
-);
+
 module.exports = router;

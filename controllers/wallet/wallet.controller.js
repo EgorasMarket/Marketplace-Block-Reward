@@ -9,11 +9,11 @@ const {
   FailedTransaction,
   Transactions,
   Bridge,
-} = reuire("../../models");
+} = require("../../models");
 const { Op } = require("sequelize");
 const crypto = require("crypto");
 const abi = require("erc-20-abi");
-import erc721 from "./erc721.json";
+const erc721 = require("./erc721.json");
 const schedule = require("node-schedule");
 const axios = require("axios").default;
 const {

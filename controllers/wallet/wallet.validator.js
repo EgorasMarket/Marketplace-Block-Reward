@@ -1,7 +1,7 @@
-const Joi = require('joi');
+const Joi = require("joi");
 
-export const get = {
+exports.get = {
   body: {
-    symbol: Joi.string().required()
+    symbol: Joi.string().required(),
   },
 };

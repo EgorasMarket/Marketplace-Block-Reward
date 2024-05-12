@@ -1,4 +1,4 @@
-import {
+const {
   Account,
   NIN,
   Bank,
@@ -10,18 +10,18 @@ import {
   BVN,
   ForeignVerification,
   KYC,
-} from "../../models";
+} = require("../../models");
 const { sendTemplate } = require("../../helpers/utils");
 
-import {
+const {
   successResponse,
   errorResponse,
   uniqueId,
   tx,
   nt,
-  add as addCredit,
+  add: addCredit,
   activity_tunnel,
-} from "../../helpers";
+} = require("../../helpers");
 const crypto = require("crypto");
 
 const Flutterwave = require("flutterwave-node-v3");
@@ -97,7 +97,7 @@ const accountInstance = axios.create({
       "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
   },
 });
-export const watu_webhook = async (req, res) => {
+exports.watu_webhook = async (req, res) => {
   try {
     const payload = req.body;
     // console.log(payload);
@@ -198,7 +198,7 @@ export const watu_webhook = async (req, res) => {
   }
 };
 
-export const flutterwaveHooksOLD = async (req, res) => {
+exports.flutterwaveHooksOLD = async (req, res) => {
   try {
     const payload = req.body;
     // console.log(payload);
@@ -265,7 +265,7 @@ export const flutterwaveHooksOLD = async (req, res) => {
   }
 };
 
-export const verifyBVNorNIN = async (req, res) => {
+exports.verifyBVNorNIN = async (req, res) => {
   try {
     const { type, code } = req.body;
     const channel = type === "bvn" ? "bvn-data" : "nin";
@@ -321,13 +321,17 @@ export const verifyBVNorNIN = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
-export const getVirtualAccount = async (req, res) => {
+exports.getVirtualAccount = async (req, res) => {
   try {
     const { firstName, lastName, email } = req.user;
 
     const checkNIN = await BVN.findOne({
       where: { email },
     });
+
+    if (!checkNIN) {
+      throw new Error("Cannot creeate Account, BVN not provided");
+    }
     if (checkNIN) {
       if (checkNIN.status == "PENDING") {
         throw new Error("Verification is in progress.");
@@ -372,7 +376,7 @@ export const getVirtualAccount = async (req, res) => {
     const form = {
       account_name: `${req.user.firstName} ${req.user.lastName}`,
       bank: process.env.PRIVIDUS_BANK_ID,
-      prefix: "BT",
+      prefix: "CB",
       customer_email: req.user.email,
       customer_phone: req.user.phone,
       customer_id: checkNIN.bvn_number,
@@ -425,7 +429,7 @@ export const getVirtualAccount = async (req, res) => {
   }
 };
 
-export const getNumber = async (req, res) => {
+exports.getNumber = async (req, res) => {
   try {
     const numbers = [];
 
@@ -441,7 +445,7 @@ export const getNumber = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
-export const getAccountInfo = async (req, res) => {
+exports.getAccountInfo = async (req, res) => {
   try {
     const { number, bankCode } = req.body;
     // console.log(req.body);
@@ -463,7 +467,7 @@ export const getAccountInfo = async (req, res) => {
   }
 };
 
-export const sendBVNVerification = async (req, res) => {
+exports.sendBVNVerification = async (req, res) => {
   try {
     const limit = parseInt(req.params.limit);
     const getManualKYCInformation = await ManualNIN.findAndCountAll({
@@ -508,7 +512,7 @@ export const sendBVNVerification = async (req, res) => {
   }
 };
 
-export const addNINOrPassportNumber = async (req, res) => {
+exports.addNINOrPassportNumber = async (req, res) => {
   try {
     const { type, nin, pvcNumber, passportNumber } = req.body;
 
@@ -657,7 +661,7 @@ export const addNINOrPassportNumber = async (req, res) => {
   }
 };
 
-export const getUserKYCStatus = async (req, res) => {
+exports.getUserKYCStatus = async (req, res) => {
   try {
     console.log(req.user.email);
 
@@ -755,7 +759,7 @@ export const getUserKYCStatus = async (req, res) => {
   }
 };
 
-export const getMyNIN = async (req, res) => {
+exports.getMyNIN = async (req, res) => {
   try {
     const manualNIN = await ManualNIN.findOne({
       where: { email: req.user.email },
@@ -767,7 +771,7 @@ export const getMyNIN = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
-export const getNIN = async (req, res) => {
+exports.getNIN = async (req, res) => {
   try {
     const checkNIN = await NIN.findOne({
       where: { email: req.user.email },
@@ -777,7 +781,7 @@ export const getNIN = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
-export const verifyAccountByNIN = async (req, res) => {
+exports.verifyAccountByNIN = async (req, res) => {
   try {
     const { nin, dob } = req.body;
     const { firstName, lastName, email } = req.user;
@@ -822,7 +826,7 @@ export const verifyAccountByNIN = async (req, res) => {
   }
 };
 
-export const addBVN = async (req, res) => {
+exports.addBVN = async (req, res) => {
   try {
     const { bvnNumber, address, image, url, firstName, lastName } = req.body;
 
@@ -901,7 +905,7 @@ export const addBVN = async (req, res) => {
   }
 };
 
-export const getMyBVN = async (req, res) => {
+exports.getMyBVN = async (req, res) => {
   try {
     const bvn = await BVN.findOne({
       where: { email: req.user.email },
@@ -913,7 +917,7 @@ export const getMyBVN = async (req, res) => {
   }
 };
 
-export const DeleteBank = async (req, res) => {
+exports.DeleteBank = async (req, res) => {
   try {
     const bank = await Account.findOne({
       where: { email: req.user.email, id: req.body.id },
@@ -933,7 +937,7 @@ export const DeleteBank = async (req, res) => {
   }
 };
 
-export const addBank = async (req, res) => {
+exports.addBank = async (req, res) => {
   try {
     const result = await watuPublic.get("country/NG/financial-institutions");
     console.log(result.data.data);
@@ -960,7 +964,7 @@ export const addBank = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
-export const add = async (req, res) => {
+exports.add = async (req, res) => {
   try {
     const { number, name, bank } = req.body;
 
@@ -990,7 +994,7 @@ export const add = async (req, res) => {
   }
 };
 
-export const foreignVerification = async (req, res) => {
+exports.foreignVerification = async (req, res) => {
   try {
     const { country, address } = req.body;
 
@@ -1050,7 +1054,7 @@ export const foreignVerification = async (req, res) => {
   }
 };
 
-export const foreignKycCallback = async (req, res) => {
+exports.foreignKycCallback = async (req, res) => {
   try {
     const { user_id } = req.body;
 
@@ -1126,7 +1130,7 @@ export const foreignKycCallback = async (req, res) => {
   }
 };
 
-export const checkForeignKyc = async (req, res) => {
+exports.checkForeignKyc = async (req, res) => {
   try {
     const { email } = req.user;
 
@@ -1148,7 +1152,7 @@ export const checkForeignKyc = async (req, res) => {
   }
 };
 
-export const update = async (req, res) => {
+exports.update = async (req, res) => {
   try {
     const { number, name, bank, id } = req.body;
 
@@ -1173,7 +1177,7 @@ export const update = async (req, res) => {
   }
 };
 
-export const get = async (req, res) => {
+exports.get = async (req, res) => {
   try {
     const page = req.params.page > 0 ? req.params.page : 1;
     const limit = parseInt(req.params.limit);
@@ -1193,7 +1197,7 @@ export const get = async (req, res) => {
   }
 };
 
-export const getAll = async (req, res) => {
+exports.getAll = async (req, res) => {
   try {
     const page = req.params.page > 0 ? req.params.page : 1;
     const limit = parseInt(req.params.limit);
@@ -1213,7 +1217,7 @@ export const getAll = async (req, res) => {
   }
 };
 
-export const getAllBanks = async (req, res) => {
+exports.getAllBanks = async (req, res) => {
   try {
     const page = req.params.page > 0 ? req.params.page : 1;
     const limit = parseInt(req.params.limit);
@@ -1232,7 +1236,7 @@ export const getAllBanks = async (req, res) => {
   }
 };
 
-export const getDevices = async (req, res) => {
+exports.getDevices = async (req, res) => {
   try {
     const page = req.params.page > 0 ? req.params.page : 1;
     const limit = parseInt(req.params.limit);
@@ -1249,7 +1253,7 @@ export const getDevices = async (req, res) => {
   }
 };
 
-export const getNotifications = async (req, res) => {
+exports.getNotifications = async (req, res) => {
   try {
     const page = req.params.page > 0 ? req.params.page : 1;
     const limit = parseInt(req.params.limit);

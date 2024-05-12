@@ -1,0 +1,21 @@
+const express = require("express");
+const router = express.Router();
+const validate = require("express-validation");
+
+const depositController = require("../../controllers/wallet/wallet.controller");
+const walletValidator = require("../../controllers/wallet/wallet.validator");
+const {
+  loginLimiter,
+  transaction,
+} = require("../../middleware/rateLimitMiddleware");
+const transactionAuthMiddleware = require("../../middleware/transactionAuthMiddleware");
+const validateRequest = require("../../helpers/joi_validationRequest");
+
+router.post(
+  "/crypto",
+  transaction,
+  validate(walletValidator.get),
+  depositController.get
+);
+
+module.exports = router;

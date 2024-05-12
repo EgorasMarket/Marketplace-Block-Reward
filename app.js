@@ -7,6 +7,7 @@ const cors = require("cors");
 const path = require("path");
 const protected = require("./routes/protected");
 const withdrawalProtected = require("./routes/withdrawal/protected");
+const depositProtected = require("./routes/deposit/protected");
 const cryptoevents = require("./routes/cryptoevents");
 const portfolio = require("./routes/portfolio");
 const web3 = require("./routes/web3");
@@ -55,6 +56,7 @@ app.use(bodyParser.json());
 // Route definitions
 app.use("/api", apiMiddleware.apiAuth, protected);
 app.use("/api/withdrawal", apiMiddleware.apiAuth, withdrawalProtected);
+app.use("/api/deposit", apiMiddleware.apiAuth, depositProtected);
 
 app.use("/portfolio", apiMiddleware.apiAuth, portfolio);
 app.use("/pub", require("./routes/pub"));
