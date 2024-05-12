@@ -12,11 +12,11 @@ router.get(
   // validate(userValidator.register),
   portfolioController.fetchTransactionHistory
 );
-// router.post(
-//   "/login",
-//   loginLimiter,
-//   // validate(userValidator.login),
-//   portfolioController.login
-// );
+router.get(
+  "/get/my/balance",
+  loginLimiter,
+  // validate(userValidator.login),
+  portfolioController.getPortfolios
+);
 
 module.exports = router;
