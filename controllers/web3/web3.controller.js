@@ -358,6 +358,8 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
             const wallet = await Promise.race([createRandomPromise]);
             // console.log(wallet, "vjbj");
 
+            address = wallet.address;
+
             dataw = {
               data: {
                 data: {
@@ -421,31 +423,13 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
 
       address = wallet.address;
     }
-
+    console.log(address, "llj");
     if (address != "") {
-      if (asset.blockchain === "EGOCHAIN") {
-        if (symbol === "NGNC") {
-          let watch = await EgoWatch.findOne({
-            where: { symbol: "NGNC", email: email },
-          });
-          if (watch) {
-            await EgoWatch.update(
-              { symbol, email: email },
-              { where: { symbol, email: email } }
-            );
-          } else {
-            await EgoWatch.create({
-              symbol: "NGNC",
-              email: email,
-              block: egoBlock,
-              address,
-            });
-          }
-        }
-      } else {
+      if (symbol === "NGNC") {
         let watch = await Watch.findOne({
-          where: { symbol, email: email },
+          where: { symbol: "NGNC", email: email },
         });
+
         if (watch) {
           await Watch.update(
             { symbol, email: email },
@@ -453,42 +437,19 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
           );
         } else {
           await Watch.create({
-            symbol,
+            symbol: "NGNC",
             email: email,
-            block: block,
+            block: egoBlock,
             address,
           });
         }
       }
     }
 
-    let finalSymbol = "";
-
-    if (symbol === "USDE") {
-      finalSymbol = "USD";
-    } else if (symbol === "ESTAE") {
-      finalSymbol = "ESTA";
-    } else {
-      finalSymbol = symbol;
-    }
+    let finalSymbol = symbol;
 
     let message = "";
-    if (asset.blockchain == "ETHEREUM") {
-      message =
-        "Send only " +
-        symbol +
-        " to this deposit address. \nEnsure the network is Ethereum (ERC20). \nDo not send NFTs to this address.";
-    } else if (asset.blockchain == "BINANCE") {
-      message =
-        "Send only " +
-        symbol +
-        " to this deposit address. \nEnsure the network is BNB Smart Chain (BEP20). \nDo not send NFTs to this address";
-    } else if (asset.blockchain == "BITCOIN") {
-      message =
-        "Send only " +
-        symbol +
-        " to this deposit address. \nEnsure the network is Bitcoin. \nDo not send NFTs to this address";
-    } else if (asset.blockchain == "EGOCHAIN") {
+    if (asset.blockchain == "EGOCHAIN") {
       if (finalSymbol === "ESTA") {
         message =
           "Send only " +
@@ -501,6 +462,8 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
           " to this deposit address. \nEnsure the network is Egochain. \nDo not send NFTs to this address";
       }
     }
+
+    console.log(address, "aapp");
 
     return { address, message };
   } catch (error) {
