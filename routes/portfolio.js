@@ -4,6 +4,7 @@ const validate = require("express-validation");
 
 // const userValidator = require("../controllers/user/user.validator");
 const portfolioController = require("../controllers/portfolio/portfolio.controller");
+// const portfolioValidate = require("../controllers/portfolio/")
 const { loginLimiter } = require("../middleware/rateLimitMiddleware");
 
 router.get(
@@ -12,11 +13,5 @@ router.get(
   // validate(userValidator.register),
   portfolioController.fetchTransactionHistory
 );
-// router.post(
-//   "/login",
-//   loginLimiter,
-//   // validate(userValidator.login),
-//   portfolioController.login
-// );
 
 module.exports = router;
