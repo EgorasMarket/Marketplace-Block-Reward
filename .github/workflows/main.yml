@@ -46,7 +46,8 @@ jobs:
           echo WEB3_PROVIDER=${{secrets.WEB3_PROVIDER}} >> .env
 
 
-          # pm2 restart 5
+          echo KORA_PBK_LIVE_KEY=${{secrets.KORA_PBK_LIVE_KEY}} >> .env
+
           
     - name: 'Restart server'
       run: |

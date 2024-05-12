@@ -1549,3 +1549,21 @@ exports.notification = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
+
+exports.list_banks = async function (req, res) {
+  try {
+    const list_banks = await axios.get(
+      "https://api.korapay.com/merchant/api/v1/misc/banks?countryCode=NG",
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.KORA_PBK_LIVE_KEY}`,
+        },
+      }
+    );
+    console.log(list_banks.data);
+    return successResponse(req, res, list_banks.data);
+  } catch (error) {
+    console.log(error.response || error.message);
+    return errorResponse(req, res, error.message);
+  }
+};

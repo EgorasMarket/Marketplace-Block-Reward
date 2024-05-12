@@ -26,4 +26,13 @@ router.post(
   validate(withdrawalValidator.cashout),
   withdrawController.cashout
 );
+
+router.post(
+  "/get/user",
+  validate(withdrawalValidator.getUser),
+  withdrawController.getUser
+);
+
+router.get("/list-banks", withdrawController.list_banks);
+
 module.exports = router;
