@@ -10,6 +10,7 @@ const withdrawalProtected = require("./routes/withdrawal/protected");
 const cryptoevents = require("./routes/cryptoevents");
 const portfolio = require("./routes/portfolio");
 const web3 = require("./routes/web3");
+const kyc = require("./routes/verify/protected");
 
 const apiMiddleware = require("./middleware/apiAuth");
 
@@ -57,6 +58,7 @@ app.use("/api", apiMiddleware.apiAuth, protected);
 app.use("/api/withdrawal", apiMiddleware.apiAuth, withdrawalProtected);
 
 app.use("/portfolio", apiMiddleware.apiAuth, portfolio);
+app.use("/kyc", apiMiddleware.apiAuth, kyc);
 app.use("/pub", require("./routes/pub"));
 app.use("/web3", web3);
 
