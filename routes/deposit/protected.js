@@ -4,6 +4,7 @@ const validate = require("express-validation");
 
 const depositController = require("../../controllers/wallet/wallet.controller");
 const walletValidator = require("../../controllers/wallet/wallet.validator");
+const accountController = require("../../controllers/account/account.controller");
 const {
   loginLimiter,
   transaction,
@@ -16,6 +17,12 @@ router.post(
   transaction,
   validate(walletValidator.get),
   depositController.get
+);
+router.post(
+  "/fiat",
+  transaction,
+  // validate(walletValidator.get),
+  accountController.getVirtualAccount
 );
 
 module.exports = router;
