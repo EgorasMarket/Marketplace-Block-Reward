@@ -18,7 +18,7 @@ router.post(
   validate(walletValidator.get),
   depositController.get
 );
-router.post(
+router.get(
   "/fiat",
   transaction,
   // validate(walletValidator.get),
