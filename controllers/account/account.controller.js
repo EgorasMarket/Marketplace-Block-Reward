@@ -464,6 +464,25 @@ exports.getAccountInfo = async (req, res) => {
   }
 };
 
+exports.verify_payout_details = async function (req, res) {
+  try {
+    const { bank_code, account } = req.params;
+    console.log(req.params, "danladi");
+
+    const details = await axios.post(
+      "https://api.korapay.com/merchant/api/v1/misc/banks/resolve",
+      { bank: bank_code, account }
+    );
+
+    console.log(details.data);
+
+    return successResponse(req, res, details.data.data);
+  } catch (error) {
+    console.log(error.response || error.message);
+    return errorResponse(req, res, error.message);
+  }
+};
+
 exports.sendBVNVerification = async (req, res) => {
   try {
     const limit = parseInt(req.params.limit);

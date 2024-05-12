@@ -4,12 +4,17 @@ const validate = require("express-validation");
 
 const withdrawController = require("../../controllers/withdrawal/withdrawal.controller");
 const withdrawalValidator = require("../../controllers/withdrawal/withdrawal.validator");
+const accountValidator = require("../../controllers/account/account.validator");
 const {
   loginLimiter,
   transaction,
 } = require("../../middleware/rateLimitMiddleware");
 const transactionAuthMiddleware = require("../../middleware/transactionAuthMiddleware");
 const validateRequest = require("../../helpers/joi_validationRequest");
+const {
+  getAccountInfo,
+  verify_payout_details,
+} = require("../../controllers/account/account.controller");
 
 router.post(
   "/external",
@@ -34,5 +39,6 @@ router.post(
 );
 
 router.get("/list-banks", withdrawController.list_banks);
+router.post("/verify/account/:account/:bank_code", verify_payout_details);
 
 module.exports = router;

@@ -1,12 +1,12 @@
 const Joi = require("joi");
 
-export const verifyBVNorNIN = {
+exports.verifyBVNorNIN = {
   body: {
     type: Joi.string().required(),
     code: Joi.string().required(),
   },
 };
-export const add = {
+exports.add = {
   body: {
     bank: Joi.string().required(),
     name: Joi.string().required(),
@@ -14,33 +14,33 @@ export const add = {
   },
 };
 
-export const verify = {
+exports.verify = {
   body: {
     nin: Joi.string().required(),
     dob: Joi.string().required(),
   },
 };
-export const DeleteBank = {
+exports.DeleteBank = {
   body: {
     id: Joi.string().required(),
   },
 };
 
-export const addBank = {
+exports.addBank = {
   body: {
     bank_name: Joi.string().required(),
     bank_code: Joi.string().required(),
   },
 };
 
-export const getAccountInfo = {
+exports.getAccountInfo = {
   body: {
     number: Joi.string().required().length(10),
     bankCode: Joi.string().required(),
   },
 };
 
-export const addNINORPassport = {
+exports.addNINORPassport = {
   body: {
     type: Joi.string().valid("nin", "passport", "pvc").required(),
     nin: Joi.string(),
@@ -49,7 +49,7 @@ export const addNINORPassport = {
     url: Joi.string().uri(),
   },
 };
-export const addBVN = {
+exports.addBVN = {
   body: {
     bvnNumber: Joi.string().required(),
     address: Joi.string().required(),
@@ -57,14 +57,14 @@ export const addBVN = {
     url: Joi.string().uri(),
   },
 };
-export const foreignVerification = {
+exports.foreignVerification = {
   body: {
     // email: Joi.string().required(),
     country: Joi.string().required(),
     address: Joi.string().required(),
   },
 };
-export const update = {
+exports.update = {
   body: {
     id: Joi.number().required(),
     bank: Joi.string().required(),
