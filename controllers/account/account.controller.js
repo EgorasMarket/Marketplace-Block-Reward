@@ -99,9 +99,6 @@ const accountInstance = axios.create({
 });
 exports.watu_webhook = async (req, res) => {
   try {
-    const payload = req.body;
-    // console.log(payload);
-
     const response = await watuAccountDeposit.post("transaction/verify", {
       transaction_id: req.body.transaction_reference,
     });

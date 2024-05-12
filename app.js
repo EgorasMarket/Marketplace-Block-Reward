@@ -60,6 +60,7 @@ app.use("/api/deposit", apiMiddleware.apiAuth, depositProtected);
 
 app.use("/portfolio", apiMiddleware.apiAuth, portfolio);
 app.use("/pub", require("./routes/pub"));
+app.use("/watu/webhook", require("./routes/watu/watu"));
 app.use("/web3", web3);
 
 // Not Found error handler
