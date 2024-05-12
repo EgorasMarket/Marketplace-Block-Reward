@@ -5,7 +5,8 @@ require("dotenv").config();
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
-const users = require("./routes/users");
+const protected = require("./routes/protected");
+const withdrawalProtected = require("./routes/withdrawal/protected");
 const cryptoevents = require("./routes/cryptoevents");
 const apiMiddleware = require("./middleware/apiAuth");
 
@@ -49,7 +50,9 @@ app.use(
 app.use(bodyParser.json());
 
 // Route definitions
-app.use("/api", apiMiddleware, users);
+app.use("/api", apiMiddleware, protected);
+app.use("/api/withdrawal", apiMiddleware, withdrawalProtected);
+
 app.use("/pub", require("./routes/pub"));
 app.use("/web3", require("./routes/web3"));
 
@@ -59,13 +62,13 @@ app.use((req, res, next) => {
   err.status = 404;
   next(err);
 });
-app.use(function (err, req, res, next) {
-  if (err instanceof ValidationError) {
-    return res.status(err.statusCode).json(err);
-  }
+// app.use(function (err, req, res, next) {
+//   if (err instanceof ValidationError) {
+//     return res.status(err.statusCode).json(err);
+//   }
 
-  return res.status(500).json(err);
-});
+//   return res.status(500).json(err);
+// });
 
 // Error handlers
 app.use((err, req, res, next) => {

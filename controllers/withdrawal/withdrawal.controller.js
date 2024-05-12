@@ -1,4 +1,4 @@
-import {
+const {
   User,
   Asset,
   Transactions,
@@ -6,8 +6,8 @@ import {
   ProductPurchases,
   ReferralList,
   Subscriber,
-} from "../../models";
-import {
+} = require("../../models");
+const {
   successResponse,
   errorResponse,
   checkBalance,
@@ -23,9 +23,9 @@ import {
   addReferralReward,
   activity_status,
   activity_tunnel,
-} from "../../helpers";
-import { newActivity } from "../user/user.controller";
-import { sendTemplateAlt } from "../../helpers/utils";
+} = require("../../helpers");
+const { newActivity } = require("../user/user.controller");
+const { sendTemplateAlt } = require("../../helpers/utils");
 
 const db = require("../../config/sequelize");
 const { Op } = require("sequelize");
@@ -72,7 +72,7 @@ const egorasProduct = axios.create({
     Accept: "application/json",
   },
 });
-export const settleCashout = async (req, res) => {
+exports.settleCashout = async (req, res) => {
   try {
     const pendingTransaction = await Transactions.findAll({
       where: { status: "ADMIN_APPROVED", type: "CASHOUT" },
@@ -118,7 +118,7 @@ export const settleCashout = async (req, res) => {
   }
 };
 
-export const settleCashoutCrypto = async (req, res) => {
+exports.settleCashoutCrypto = async (req, res) => {
   try {
     const pendingTransaction = await Transactions.findAll({
       where: { status: "ADMIN_APPROVED", type: "WIITHDRAWAL" },
@@ -522,7 +522,7 @@ export const settleCashoutCrypto = async (req, res) => {
   }
 };
 
-export const getUser = async (req, res) => {
+exports.getUser = async (req, res) => {
   try {
     const { username_email } = req.body;
     const getUser = await User.findOne({
@@ -540,7 +540,7 @@ export const getUser = async (req, res) => {
   }
 };
 
-export const fortPayNewSub = async (req, res) => {
+exports.fortPayNewSub = async (req, res) => {
   try {
     await db.sequelize.transaction(async (fortPayTransaction) => {
       let symbol = req.body.symbol;
@@ -590,7 +590,7 @@ export const fortPayNewSub = async (req, res) => {
   }
 };
 
-export const fortPayNew = async (req, res) => {
+exports.fortPayNew = async (req, res) => {
   const { email } = req.body;
   try {
     // {
@@ -954,7 +954,7 @@ export const fortPayNew = async (req, res) => {
   }
 };
 
-export const fortPay = async (req, res) => {
+exports.fortPay = async (req, res) => {
   try {
     await db.sequelize.transaction(async (fortPayTransaction) => {
       let symbol = req.body.data[0].data.symbol;
@@ -1010,7 +1010,7 @@ export const fortPay = async (req, res) => {
   }
 };
 
-export const int = async (req, res) => {
+exports.int = async (req, res) => {
   let sendTransaction;
   try {
     const { int, symbol } = req.body;
@@ -1081,7 +1081,7 @@ export const int = async (req, res) => {
   }
 };
 
-export const internal = async (req, res) => {
+exports.internal = async (req, res) => {
   setTimeout(async () => {
     let sendTransaction;
     try {
@@ -1227,7 +1227,7 @@ export const internal = async (req, res) => {
   }, getRan(1, 1000));
 };
 
-export const external = async (req, res) => {
+exports.external = async (req, res) => {
   setTimeout(async () => {
     let sendTransaction;
     try {
@@ -1366,7 +1366,7 @@ export const external = async (req, res) => {
       });
 
       await sendTemplateAlt({
-        subject: "Withdrawl request",
+        subject: "Withdrawal request",
         message: `${req.user.email} is requesting withdrawal of ${amount} ${symbol} using ${network} network. Wallet Address is ${wallet_address}`,
       });
       return successResponse(req, res, {});
@@ -1385,7 +1385,7 @@ export const external = async (req, res) => {
   }, getRan(1, 1000));
 };
 
-export const cashout = async (req, res) => {
+exports.cashout = async (req, res) => {
   setTimeout(async () => {
     let sendTransaction;
     try {
@@ -1517,7 +1517,7 @@ export const cashout = async (req, res) => {
   }, getRan(1, 1000));
 };
 
-export const fetch = async (req, res) => {
+exports.fetch = async (req, res) => {
   try {
     const page = req.params.page > 0 ? req.params.page : 1;
     const limit = parseInt(req.params.limit);
@@ -1532,7 +1532,7 @@ export const fetch = async (req, res) => {
   }
 };
 
-export const notification = async (req, res) => {
+exports.notification = async (req, res) => {
   try {
     // sendFcmMessage(req.body);
     const getFCMToken = await Notifier.findOne({

@@ -4,7 +4,14 @@ const { validate, ValidationError, Joi } = require("express-validation");
 
 const userValidator = require("../controllers/user/user.validator");
 const userController = require("../controllers/user/user.controller");
-const { loginLimiter } = require("../middleware/rateLimitMiddleware");
+const withdrawController = require("../controllers/withdrawal/withdrawal.controller");
+const withdrawalValidator = require("../controllers/withdrawal/withdrawal.validator");
+const {
+  loginLimiter,
+  transaction,
+} = require("../middleware/rateLimitMiddleware");
+const transactionAuthMiddleware = require("../middleware/transactionAuthMiddleware");
+const validateRequest = require("../helpers/joi_validationRequest");
 
 router.post(
   "/register",
@@ -18,5 +25,4 @@ router.post(
   // validate(userValidator.login),
   userController.login
 );
-
 module.exports = router;

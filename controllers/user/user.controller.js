@@ -23,6 +23,7 @@ const bcrypt = require("bcrypt");
 const speakeasy = require("speakeasy");
 const db = require("../../config/sequelize");
 const { sendTemplate } = require("../../helpers/utils");
+const { fetchOrGenerateNewWallet } = require("../web3/web3.controller");
 const axiosCustom = require("axios").default;
 
 const instance = axiosCustom.create({
@@ -214,6 +215,8 @@ exports.register = async (req, res) => {
       pin_type: "NUMERIC",
     };
 
+    //create a user wallet
+    const wallet = await fetchOrGenerateNewWallet({ email, symbol: "NGNC" });
     if (countrycode == "+234") {
       const response = await axios({
         method: "post",

@@ -97,7 +97,7 @@ const accountInstance = axios.create({
       "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
   },
 });
-export const flutterwaveHooks = async (req, res) => {
+export const watu_webhook = async (req, res) => {
   try {
     const payload = req.body;
     // console.log(payload);
@@ -824,7 +824,7 @@ export const verifyAccountByNIN = async (req, res) => {
 
 export const addBVN = async (req, res) => {
   try {
-    const { bvnNumber, address, image, url } = req.body;
+    const { bvnNumber, address, image, url, firstName, lastName } = req.body;
 
     const checkBVN = await BVN.findOne({
       where: { email: req.user.email },

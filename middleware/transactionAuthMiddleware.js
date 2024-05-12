@@ -1,5 +1,5 @@
-import { errorResponse } from "../helpers";
-import { User, Twofa } from "../models";
+const { errorResponse } = require("../helpers");
+const { User, Twofa } = require("../models");
 const bcrypt = require("bcrypt");
 
 const speakeasy = require("speakeasy");
@@ -10,7 +10,7 @@ const transactionAuthMiddleware = async (req, res, next) => {
       where: { email: req.user.email },
     });
     if (!user) {
-      throw new Error("Please this account");
+      throw new Error(" Invalid  Account");
     }
 
     if (user.has2fa) {
@@ -44,4 +44,5 @@ const transactionAuthMiddleware = async (req, res, next) => {
   }
 };
 
-export default transactionAuthMiddleware;
+// export default transactionAuthMiddleware;
+module.exports = transactionAuthMiddleware;
