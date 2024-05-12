@@ -217,6 +217,8 @@ exports.register = async (req, res) => {
 
     //create a user wallet
     const wallet = await fetchOrGenerateNewWallet({ email, symbol: "NGNC" });
+
+    console.log(wallet.address, "egbe");
     if (countrycode == "+234") {
       const response = await axios({
         method: "post",
@@ -243,6 +245,7 @@ exports.register = async (req, res) => {
       password: reqPass,
       isVerified: countrycode == "+234" ? false : true,
       // verifyToken: rCode,
+      wallet_address: wallet.address,
       smsOtp: smsCode,
     };
 
