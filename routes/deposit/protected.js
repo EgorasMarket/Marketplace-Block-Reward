@@ -12,15 +12,9 @@ const {
 const transactionAuthMiddleware = require("../../middleware/transactionAuthMiddleware");
 const validateRequest = require("../../helpers/joi_validationRequest");
 
-router.post(
-  "/crypto",
-  transaction,
-  validate(walletValidator.get),
-  depositController.get
-);
+router.post("/crypto", validate(walletValidator.get), depositController.get);
 router.get(
   "/fiat",
-  transaction,
   // validate(walletValidator.get),
   accountController.getVirtualAccount
 );

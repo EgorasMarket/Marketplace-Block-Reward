@@ -15,7 +15,6 @@ router.get(
 );
 router.get(
   "/get/my/balance",
-  loginLimiter,
   // validate(userValidator.login),
   portfolioController.getPortfolios
 );

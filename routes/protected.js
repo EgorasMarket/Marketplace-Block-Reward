@@ -14,7 +14,6 @@ const validateRequest = require("../helpers/joi_validationRequest");
 
 router.post(
   "/user/generate/virtual/account",
-  loginLimiter,
   accountController.getVirtualAccount
 );
 

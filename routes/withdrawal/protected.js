@@ -14,19 +14,16 @@ const validateRequest = require("../../helpers/joi_validationRequest");
 router.post(
   "/external",
   validate(withdrawalValidator.external),
-  transaction,
   withdrawController.external
 );
 router.post(
   "/internal",
   validate(withdrawalValidator.internal),
-  transaction,
   withdrawController.internal
 );
 router.post(
   "/cashout",
   validate(withdrawalValidator.cashout),
-  transaction,
   withdrawController.cashout
 );
 module.exports = router;
