@@ -48,9 +48,9 @@ jobs:
 
           # pm2 restart 5
           
-    # - name: 'Restart server'
-    #   run: |
-    #       pm2 restart all
+    - name: 'Restart server'
+      run: |
+          pm2 restart 9
          
          
 
