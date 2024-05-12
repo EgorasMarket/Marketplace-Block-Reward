@@ -68,7 +68,7 @@ exports.fetchTransactionHistory = async (req, res) => {
   console.log(req.query.page, req.query.limit, "Kkkkkk");
   try {
     const page = req.query.page > 0 ? req.query.page : 1;
-    const limit = parseInt(req.query.limit);
+    const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
     let user = req.user.email;
     let query = `call sp_getHistory('${user}', ${offset}, ${limit})`;
