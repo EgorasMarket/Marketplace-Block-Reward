@@ -10,6 +10,7 @@ const {
   BVN,
   ForeignVerification,
   KYC,
+  virtual_banks,
 } = require("../../models");
 const { sendTemplate } = require("../../helpers/utils");
 
@@ -29,6 +30,7 @@ const axios = require("axios").default;
 
 const { Op } = require("sequelize");
 const db = require("../../config/sequelize");
+const { resolveInclude } = require("ejs");
 
 const instance = axios.create({
   baseURL: process.env.VERIFY_API_ENDPOINT,
@@ -322,32 +324,11 @@ exports.getVirtualAccount = async (req, res) => {
   try {
     const { firstName, lastName, email } = req.user;
 
-    const checkNIN = await BVN.findOne({
-      where: { email },
+    const account = await virtual_banks.findOne({
+      where: {
+        email,
+      },
     });
-
-    if (!checkNIN) {
-      throw new Error("Cannot creeate Account, BVN not provided");
-    }
-    if (checkNIN) {
-      if (checkNIN.status == "PENDING") {
-        throw new Error("Verification is in progress.");
-      } else if (checkNIN.status == "REJECTED") {
-        throw new Error(
-          "Account verfication was rejected. Please contact support."
-        );
-      }
-    }
-
-    const checkKYC = await KYC.findOne({
-      where: { email: req.user.email, level: "LEVEL_2", status: "VERIFIED" },
-    });
-
-    if (!checkKYC) {
-      return errorResponse(req, res, "Sorry, kindly upgrade to KYC Level 2!");
-    }
-
-    const meta = JSON.parse(checkNIN.bvn_meta);
 
     const watu = await Watu.findOne({
       where: { email },
@@ -370,11 +351,14 @@ exports.getVirtualAccount = async (req, res) => {
       };
       return successResponse(req, res, { vA });
     }
+    const cube_prefix = "CB";
     const form = {
-      account_name: `${req.user.firstName} ${req.user.lastName}`,
+      account_name: `Chidoro Ndubueze`,
+      // account_name: `${req.user.firstName} ${req.user.lastName}`,
       bank: process.env.PRIVIDUS_BANK_ID,
-      prefix: "CB",
-      customer_email: req.user.email,
+      // prefix: "XY",
+      customer_email: "gibbywise@gmail.com",
+      // customer_email: req.user.email,
       customer_phone: req.user.phone,
       customer_id: checkNIN.bvn_number,
       customer_id_type: "BVN",
@@ -385,6 +369,7 @@ exports.getVirtualAccount = async (req, res) => {
       form
     );
 
+    console.log(result.data);
     const insertPayload = {
       account_id: result.data.data.account_id,
       account_name: result.data.data.account_name,

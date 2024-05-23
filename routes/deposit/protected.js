@@ -5,6 +5,7 @@ const validate = require("express-validation");
 const depositController = require("../../controllers/wallet/wallet.controller");
 const walletValidator = require("../../controllers/wallet/wallet.validator");
 const accountController = require("../../controllers/account/account.controller");
+const paystackController = require("../../controllers/Paystack/Paystack.controller");
 const {
   loginLimiter,
   transaction,
@@ -16,7 +17,14 @@ router.post("/crypto", validate(walletValidator.get), depositController.get);
 router.get(
   "/fiat",
   // validate(walletValidator.get),
-  accountController.getVirtualAccount
+  paystackController.generateVirtualAccount
+
+  // accountController.getVirtualAccount
+);
+
+router.post(
+  "/paystack/create-account",
+  paystackController.generateVirtualAccount
 );
 
 module.exports = router;

@@ -10,6 +10,7 @@ const withdrawalProtected = require("./routes/withdrawal/protected");
 const depositProtected = require("./routes/deposit/protected");
 const cryptoevents = require("./routes/cryptoevents");
 const portfolio = require("./routes/portfolio");
+const watu_protected = require("./routes/watu/protected");
 const web3 = require("./routes/web3");
 const kyc = require("./routes/verify/protected");
 
@@ -60,6 +61,7 @@ app.use("/api/withdrawal", apiMiddleware.apiAuth, withdrawalProtected);
 app.use("/api/deposit", apiMiddleware.apiAuth, depositProtected);
 
 app.use("/portfolio", apiMiddleware.apiAuth, portfolio);
+app.use("/api/watu", apiMiddleware.apiAuth, watu_protected);
 app.use("/kyc", apiMiddleware.apiAuth, kyc);
 app.use("/pub", require("./routes/pub"));
 app.use("/watu/webhook", require("./routes/watu/watu"));
