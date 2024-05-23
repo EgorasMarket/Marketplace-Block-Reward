@@ -30,6 +30,8 @@ app.set("views", path.join(__dirname, "views"));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const allowedOrigins = [
+  "https://usecube.io",
+  "https://www.usecube.io",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:5173",
