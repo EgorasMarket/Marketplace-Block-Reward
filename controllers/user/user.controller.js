@@ -376,3 +376,147 @@ exports.login = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const user = await User.scope("withSecretColumns").findOne({
+      where: { id: userId },
+    });
+
+    const match = await bcrypt.compare(req.body.oldPassword, user.password);
+
+    const newPass = bcrypt.hashSync(
+      req.body.newPassword,
+      parseInt(process.env.SALTROUNDS)
+    );
+    await User.update({ password: newPass }, { where: { id: user.id } });
+  
+    return successResponse(req, res, {});
+  } catch (error) {
+
+    return errorResponse(req, res, error.message);
+  }
+};
+
+exports.emailResetLink = async (req, res) => {
+  try {
+    const user = await User.scope("withSecretColumns").findOne({
+      where: { email: req.body.email },
+    });
+
+    const emailId = uuidv4();
+
+    if (!user) {
+      throw new Error("Invalid account!");
+    }
+    const rCode = Math.floor(1000 + Math.random() * 9000);
+
+    const payload = {
+      emailId: emailId,
+    };
+
+    let update = await User.update(payload, {
+      where: { email: req.body.email },
+    });
+
+    const dynamic_template_data = {
+      code: rCode,
+      vId: emailId,
+      subject: "Egoras Email Verification",
+      name: `${user.firstName}, ${user.lastName}`,
+    };
+    sendTemplate(
+      user.email,
+      process.env.FROM,
+      process.env.EMAILVERIFICATION_TEMPLATE_ID,
+      dynamic_template_data
+    );
+
+    await User.update({ verifyToken: rCode }, { where: { id: user.id } });
+    return successResponse(req, res, {});
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
+
+exports.resetLink = async (req, res) => {
+  try {
+    const user = await User.scope("withSecretColumns").findOne({
+      where: { email: req.body.email },
+    });
+
+    if (!user) {
+      throw new Error("Invalid account!");
+    }
+    const rCode = Math.floor(1000 + Math.random() * 9000);
+    const dynamic_template_data = {
+      code: rCode,
+      subject: "Egoras Password reset",
+      name: `${user.firstName}, ${user.lastName}`,
+    };
+    sendTemplate(
+      user.email,
+      process.env.FROM,
+      process.env.PASSWORDRESET_TEMPLATE_ID,
+      dynamic_template_data
+    );
+
+    await User.update({ verifyToken: rCode }, { where: { id: user.id } });
+    return successResponse(req, res, {});
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const user = await User.scope("withSecretColumns").findOne({
+      where: { verifyToken: req.body.code },
+    });
+
+    if (!user) {
+      throw new Error("Invalid account!");
+    }
+    const newPass = bcrypt.hashSync(
+      req.body.newPassword,
+      parseInt(process.env.SALTROUNDS)
+    );
+    await User.update(
+      { password: newPass, verifyToken: "n/a" },
+      { where: { id: user.id } }
+    );
+    const dynamic_template_data = {
+      subject: "Egoras Password changed",
+      name: `${user.firstName}, ${user.lastName}`,
+    };
+    sendTemplate(
+      user.email,
+      process.env.FROM,
+      process.env.CHANGED_TEMPLATE_ID,
+      dynamic_template_data
+    );
+    return successResponse(req, res, {});
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
+
+exports.profile = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    let kycMet;
+    const user = await User.findOne({ where: { id: userId } });
+    const bvnData = await BVN.findOne({ where: { email: user.email } });
+
+    if (bvnData != null) {
+      kycMet = bvnData.image;
+    }
+
+    console.log(typeof kycMet);
+
+    return successResponse(req, res, { user, meta: kycMet });
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
