@@ -26,20 +26,6 @@ exports.DeleteBank = {
   },
 };
 
-exports.addBank = {
-  body: {
-    bank_name: Joi.string().required(),
-    bank_code: Joi.string().required(),
-  },
-};
-
-exports.getAccountInfo = {
-  body: {
-    number: Joi.string().required().length(10),
-    bankCode: Joi.string().required(),
-  },
-};
-
 exports.addNINORPassport = {
   body: {
     type: Joi.string().valid("nin", "passport", "pvc").required(),

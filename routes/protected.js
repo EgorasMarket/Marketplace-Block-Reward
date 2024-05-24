@@ -12,9 +12,6 @@ const {
 const transactionAuthMiddleware = require("../middleware/transactionAuthMiddleware");
 const validateRequest = require("../helpers/joi_validationRequest");
 
-router.post(
-  "/user/generate/virtual/account",
-  accountController.getVirtualAccount
-);
+
 
 module.exports = router;

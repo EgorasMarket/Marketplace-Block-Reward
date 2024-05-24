@@ -12,7 +12,6 @@ const {
 const transactionAuthMiddleware = require("../../middleware/transactionAuthMiddleware");
 const validateRequest = require("../../helpers/joi_validationRequest");
 const {
-  getAccountInfo,
   verify_payout_details,
 } = require("../../controllers/account/account.controller");
 
@@ -21,11 +20,13 @@ router.post(
   validate(withdrawalValidator.external),
   withdrawController.external
 );
+
 router.post(
   "/internal",
   validate(withdrawalValidator.internal),
   withdrawController.internal
 );
+
 router.post(
   "/cashout",
   validate(withdrawalValidator.cashout),

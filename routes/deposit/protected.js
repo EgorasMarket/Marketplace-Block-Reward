@@ -18,8 +18,6 @@ router.get(
   "/fiat",
   // validate(walletValidator.get),
   paystackController.generateVirtualAccount
-
-  // accountController.getVirtualAccount
 );
 
 router.post(

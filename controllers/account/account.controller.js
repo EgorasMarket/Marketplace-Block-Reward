@@ -54,28 +54,6 @@ const watuAccount = axios.create({
   },
 });
 
-const watuAccountDeposit = axios.create({
-  baseURL: process.env.WATU_BASE_URL,
-  timeout: 15000,
-
-  headers: {
-    Authorization: `Bearer ${process.env.WATU_DEPOSIT_SECRET_KEY}`,
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-});
-
-const watuPublic = axios.create({
-  baseURL: process.env.WATU_BASE_URL,
-  timeout: 15000,
-
-  headers: {
-    Authorization: `Bearer ${process.env.WATU_PUBLIC_KEY}`,
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-});
-
 const you_verify_instance = axios.create({
   // baseURL: process.env.YOU_VERIFY_TESTNET_ENDPOINT,
   baseURL: process.env.YOU_VERIFY_MAINNET_ENDPOINT,
@@ -99,103 +77,7 @@ const accountInstance = axios.create({
       "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
   },
 });
-exports.watu_webhook = async (req, res) => {
-  try {
-    const response = await watuAccountDeposit.post("transaction/verify", {
-      transaction_id: req.body.transaction_reference,
-    });
-    const { payment_data } = response.data.data;
-    const bank_info = response.data.data.bank_account.account;
-    const tRef = response.data.data.transaction_reference;
-    const resp = response.data.data;
 
-    // if(!response.data.status === "successful" &&  !response.data.currency === "NGN"){
-    //   throw new Error('Verification Failed');
-    // }
-
-    const watu = await Watu.findOne({
-      where: {
-        account_id: bank_info.account_id,
-        account_name: bank_info.account_name,
-      },
-    });
-
-    if (!watu) {
-      throw new Error("Verification Failed");
-    }
-
-    if (
-      resp.feature_id != "watu-recharge" ||
-      resp.transaction_group != "static-account-transfer"
-    ) {
-      throw new Error("Invlid transaction");
-    }
-
-    // always check the  "feature_id": "watu-recharge" and the  "transaction_group": "static-account-transfer"
-
-    await db.sequelize.transaction(async (flwHooks) => {
-      const findDepositHash = await Deposit.findOne({ where: { hash: tRef } });
-      if (findDepositHash) {
-        throw new Error("Already have already been credited!");
-      }
-
-      const enterHash = await Deposit.create(
-        {
-          hash: tRef,
-          blockchain: "Naira",
-        },
-        { transaction: flwHooks }
-      );
-
-      const amount = parseFloat(payment_data.amount);
-      const addFund = await addCredit(
-        watu.email,
-        "NGN",
-        "portfolio",
-        "value",
-        amount,
-        flwHooks
-      );
-      const ntPayload = {
-        email: watu.email,
-        meta: {
-          symbol: "NGN",
-          amount: amount.toString(),
-          type: "deposit",
-        },
-      };
-
-      const createNt = await nt(ntPayload, flwHooks);
-
-      const txPayload = {
-        email: watu.email,
-        to_email: watu.email,
-        meta: {
-          symbol: "NGN",
-          txh: tRef,
-          confirmation: "3/3",
-          network: "Watu",
-          wallet_address: "n/a",
-        },
-
-        amount,
-        type: "DEPOSIT",
-        status: "SUCCESS",
-      };
-
-      const createTx = await tx(txPayload, flwHooks);
-
-      if (!addFund[0][1] && !enterHash && !createNt[0][1] && !createTx[0][1]) {
-        throw new Error("Failed");
-      }
-      // return successResponse(req, res, {});
-    });
-    return successResponse(req, res, {});
-  } catch (error) {
-    console.log(error);
-    return errorResponse(req, res, error.message);
-  }
-};
 
 exports.flutterwaveHooksOLD = async (req, res) => {
   try {
@@ -320,96 +202,7 @@ exports.verifyBVNorNIN = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
-exports.getVirtualAccount = async (req, res) => {
-  try {
-    const { firstName, lastName, email } = req.user;
 
-    const account = await virtual_banks.findOne({
-      where: {
-        email,
-      },
-    });
-
-    const watu = await Watu.findOne({
-      where: { email },
-    });
-
-    if (watu) {
-      var vA = {
-        status: "success",
-        message: "Virtual account created",
-        data: {
-          response_code: "02",
-          response_message: "Transaction in progress",
-          account_number: watu.account_id,
-          account_name: watu.account_name,
-          frequency: "N/A",
-          bank_name: "PROVIDUS BANK",
-
-          amount: req.body.amount,
-        },
-      };
-      return successResponse(req, res, { vA });
-    }
-    const cube_prefix = "CB";
-    const form = {
-      account_name: `Chidoro Ndubueze`,
-      // account_name: `${req.user.firstName} ${req.user.lastName}`,
-      bank: process.env.PRIVIDUS_BANK_ID,
-      // prefix: "XY",
-      customer_email: "gibbywise@gmail.com",
-      // customer_email: req.user.email,
-      customer_phone: req.user.phone,
-      customer_id: checkNIN.bvn_number,
-      customer_id_type: "BVN",
-    };
-
-    const result = await watuAccountDeposit.post(
-      "virtual-account/create",
-      form
-    );
-
-    console.log(result.data);
-    const insertPayload = {
-      account_id: result.data.data.account_id,
-      account_name: result.data.data.account_name,
-      email: req.user.email,
-      bank: result.data.data.bank,
-    };
-    await Watu.create(insertPayload);
-    var vA = {
-      status: "success",
-      message: "Virtual account created",
-      data: {
-        response_code: "02",
-        response_message: "Transaction in progress",
-        account_number: insertPayload.account_id,
-        account_name: insertPayload.account_name,
-        frequency: "N/A",
-        bank_name: "PROVIDUS BANK",
-
-        amount: req.body.amount,
-      },
-    };
-
-    // let vA = await flw.VirtualAcct.create(details);
-
-    return successResponse(req, res, { vA });
-  } catch (error) {
-    if (typeof error.response !== "undefined") {
-      return errorResponse(
-        req,
-        res,
-        "Sorry, Your Request Failed. Kindly contact our support team if this persists!"
-      );
-    }
-    if (error.message == "Cannot read property 'meta' of null") {
-      return errorResponse(req, res, "You have not verified your BVN");
-    }
-
-    return errorResponse(req, res, error.message);
-  }
-};
 
 exports.getNumber = async (req, res) => {
   try {
@@ -427,27 +220,7 @@ exports.getNumber = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
-exports.getAccountInfo = async (req, res) => {
-  try {
-    const { number, bankCode } = req.body;
-    // console.log(req.body);
-    const result = await watuPublic.post("financial-institution/verify", {
-      data: [{ financial_institution_id: bankCode, account_id: number }],
-    });
-    const payload = {
-      responseBody: {
-        accountNumber: result.data.data[0].account_id,
-        accountName: result.data.data[0].account_name,
-        bankCode: result.data.data[0].id,
-      },
-    };
 
-    return successResponse(req, res, payload);
-  } catch (error) {
-    console.log(error.response);
-    return errorResponse(req, res, error.message);
-  }
-};
 
 exports.verify_payout_details = async function (req, res) {
   try {
@@ -938,33 +711,7 @@ exports.DeleteBank = async (req, res) => {
   }
 };
 
-exports.addBank = async (req, res) => {
-  try {
-    const result = await watuPublic.get("country/NG/financial-institutions");
-    console.log(result.data.data);
 
-    const banks = result.data.data;
-    for (let index = 0; index < banks.length; index++) {
-      const bank = await Bank.findOne({
-        where: { bank_code: banks[index].id },
-      });
-      if (!bank) {
-        const payload = {
-          bank_name: banks[index].name,
-          bank_code: banks[index].id,
-          addedBy: req.user.email,
-        };
-
-        await Bank.create(payload);
-      }
-    }
-
-    return successResponse(req, res, {});
-  } catch (error) {
-    console.log(error);
-    return errorResponse(req, res, error.message);
-  }
-};
 exports.add = async (req, res) => {
   try {
     const { number, name, bank } = req.body;
