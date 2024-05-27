@@ -2,7 +2,6 @@ const axios = require("axios").default;
 
 const { errorResponse, successResponse } = require("../../helpers");
 const db = require("../../config/sequelize");
-// import { Bridge } from "../../models";
 var { Bridge, CryptoEvent, LiquidityPoolBalance } = require("../../models");
 const { differenceInHours } = require("date-fns");
 

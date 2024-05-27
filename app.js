@@ -6,11 +6,11 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
 const protected = require("./routes/protected");
+const products = require("./routes/products");
+const order = require("./routes/orders/orders");
 const withdrawalProtected = require("./routes/withdrawal/protected");
 const depositProtected = require("./routes/deposit/protected");
-const cryptoevents = require("./routes/cryptoevents");
 const portfolio = require("./routes/portfolio");
-const watu_protected = require("./routes/watu/protected");
 const web3 = require("./routes/web3");
 const kyc = require("./routes/verify/protected");
 
@@ -30,6 +30,8 @@ app.set("views", path.join(__dirname, "views"));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const allowedOrigins = [
+  "https://usecube.io",
+  "https://www.usecube.io",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:5173",
@@ -57,14 +59,14 @@ app.use(bodyParser.json());
 
 // Route definitions
 app.use("/api", apiMiddleware.apiAuth, protected);
+app.use("/product", products);
+app.use("/order", apiMiddleware.apiAuth, order);
 app.use("/api/withdrawal", apiMiddleware.apiAuth, withdrawalProtected);
 app.use("/api/deposit", apiMiddleware.apiAuth, depositProtected);
 
 app.use("/portfolio", apiMiddleware.apiAuth, portfolio);
-app.use("/api/watu", apiMiddleware.apiAuth, watu_protected);
 app.use("/kyc", apiMiddleware.apiAuth, kyc);
 app.use("/pub", require("./routes/pub"));
-app.use("/watu/webhook", require("./routes/watu/watu"));
 app.use("/web3", web3);
 
 // Not Found error handler
