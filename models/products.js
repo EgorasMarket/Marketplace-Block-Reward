@@ -60,6 +60,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       amount: DataTypes.DECIMAL,
+      token_type: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {}
   );

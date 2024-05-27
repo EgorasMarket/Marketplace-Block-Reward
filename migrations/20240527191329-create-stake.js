@@ -31,8 +31,8 @@ module.exports = {
         type: Sequelize.STRING(2000),
       },
       purchase_val: {
-        type: Sequelize.DECIMAL(10)
-      }
+        type: Sequelize.DECIMAL(10),
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
