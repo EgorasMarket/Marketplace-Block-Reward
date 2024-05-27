@@ -102,6 +102,7 @@ exports.PurchaseProduct = async (req, res) => {
             );
 
             // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
+            // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
 
             let deductPortfolio = await deduct(
                 email,
