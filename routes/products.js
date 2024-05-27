@@ -1,14 +1,14 @@
-import express from "express";
-import validate from "express-validation";
-import { check } from "express-validator";
+const express = require("express");
+const validate = require("express-validation");
+// const { check } = require("express-validator");
 
-import * as productController from "../controllers/products/products.controller";
-import * as productValidator from "../controllers/products/products.validator";
+const productController = require("../controllers/products/products.controller");
+const productValidator = require("../controllers/products/products.validator");
 
 const router = express.Router();
 
-router.use("/bid", require("./bid"));
-router.use("/qrdata", require("./qrdata"));
+// router.use("/bid", require("./bid"));
+// router.use("/qrdata", require("./qrdata"));
 
 router.post(
   "/initialize/add/product",
@@ -30,7 +30,7 @@ router.put(
 
 router.put(
   "/update",
-  check("product_id").notEmpty().withMessage("Must not be empty"),
+//   check("product_id").notEmpty().withMessage("Must not be empty"),
   productController.UpdateAsSold
 );
 
@@ -45,7 +45,7 @@ router.get("/approved", productController.ApprovedProduct);
 
 router.get(
   "/category/:category",
-  check("category").notEmpty().withMessage("Please provide a category"),
+//   check("category").notEmpty().withMessage("Please provide a category"),
 
   productController.FetchProductByCategory
 );

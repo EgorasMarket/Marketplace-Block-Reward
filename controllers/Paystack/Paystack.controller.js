@@ -15,7 +15,6 @@ const {
   virtual_banks,
 } = require("../../models");
 const mockSuccess = require("./virtual-account-success.json");
-// import Paystack from "./PaystackInstance";
 const Paystack = require("./PaystackInstance");
 exports.generateVirtualAccount = async (req, res) => {
   try {

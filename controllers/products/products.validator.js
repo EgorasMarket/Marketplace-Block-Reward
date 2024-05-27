@@ -1,19 +1,19 @@
 const Joi = require("joi");
 
-export const getOtherUserProfile = {
+exports.getOtherUserProfile = {
   body: {
     userId: Joi.number().required(),
   },
 };
 
-export const changePassword = {
+exports.changePassword = {
   body: {
     oldPassword: Joi.string().required(),
     newPassword: Joi.string().required(),
   },
 };
 
-export const initialAdd = {
+exports.initialAdd = {
   body: {
     // product_image: Joi.string().required(),
     product_name: Joi.string().required(),
@@ -26,7 +26,7 @@ export const initialAdd = {
   },
 };
 
-export const initialAddDirect = {
+exports.initialAddDirect = {
   body: {
     // product_image: Joi.string().required(),
     product_name: Joi.string().required(),
@@ -42,7 +42,7 @@ export const initialAddDirect = {
   },
 };
 
-export const updateProduct = {
+exports.updateProduct = {
   body: {
     product_id: Joi.string().required(),
     product_name: Joi.string().required(),
@@ -55,7 +55,7 @@ export const updateProduct = {
   },
 };
 
-export const login = {
+exports.login = {
   body: {
     email: Joi.string().email().required(),
     password: Joi.string().required(),

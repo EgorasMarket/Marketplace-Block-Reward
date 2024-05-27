@@ -6,6 +6,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
 const protected = require("./routes/protected");
+const products = require("./routes/products");
+const order = require("./routes/orders/orders");
 const withdrawalProtected = require("./routes/withdrawal/protected");
 const depositProtected = require("./routes/deposit/protected");
 const portfolio = require("./routes/portfolio");
@@ -57,6 +59,8 @@ app.use(bodyParser.json());
 
 // Route definitions
 app.use("/api", apiMiddleware.apiAuth, protected);
+app.use("/product", products);
+app.use("/order", apiMiddleware.apiAuth, order);
 app.use("/api/withdrawal", apiMiddleware.apiAuth, withdrawalProtected);
 app.use("/api/deposit", apiMiddleware.apiAuth, depositProtected);
 
