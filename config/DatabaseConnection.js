@@ -3,7 +3,6 @@ require("dotenv").config();
 const { log } = require("debug");
 const { Sequelize } = require("sequelize");
 
-console.log("fdkn");
 class DatabaseConnection {
   constructor() {
     if (!DatabaseConnection.instance) {
