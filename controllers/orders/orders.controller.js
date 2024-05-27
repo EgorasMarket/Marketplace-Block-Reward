@@ -13,6 +13,7 @@ const {
   errorResponse,
   DeductQuantity,
   deduct,
+  Stake,
 } = require("../../helpers");
 
 exports.PurchaseProduct = async (req, res) => {
@@ -84,8 +85,24 @@ exports.PurchaseProduct = async (req, res) => {
       }
     });
 
+    //send the user the relevant 404 token to managed wallet
+    await fundUserWalletOnSuccessfulPurchase();
+    //run the stake algorithm to ensure workability
+    await ProductStake({ product: checkProduct, quantity, user_id: isUser.id });
     return successResponse(req, res, {});
   } catch (error) {
     return errorResponse(req, res, error.message);
   }
+};
+
+const fundUserWalletOnSuccessfulPurchase = async () => {};
+
+const ProductStake = async ({ product, user_id, quantity }) => {
+  //grab the product and extract the token type
+
+  const { token_type } = product; //extract the token type from payload
+
+  await Stake.create({});
+
+  //collect user information and token info then add to stake table
 };
