@@ -34,13 +34,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
-<<<<<<< HEAD
-      user_images: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-=======
->>>>>>> deploy
       product_brand: {
         type: DataTypes.STRING,
         allowNull: true,

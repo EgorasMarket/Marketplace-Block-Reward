@@ -22,11 +22,7 @@ const {
   uniqueId,
   success,
 } = require("../../helpers");
-<<<<<<< HEAD
-const { validationResult } = require("express-validator");
-=======
 // const { validationResult } = require("express-validator");
->>>>>>> deploy
 
 exports.allProducts = async (req, res) => {
   try {
@@ -718,17 +714,10 @@ exports.ApprovedProduct = async (req, res) => {
 
 
 exports.UpdateAsSold = async (req, res) => {
-<<<<<<< HEAD
-  const error = validationResult(req);
-  if (!error.isEmpty()) {
-    return errorResponse(req, res, error.array(), 400);
-  }
-=======
   // const error = validationResult(req);
   // if (!error.isEmpty()) {
   //   return errorResponse(req, res, error.array(), 400);
   // }
->>>>>>> deploy
   const { product_id } = req.body;
   try {
     //fetch product
