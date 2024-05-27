@@ -11,13 +11,16 @@ var fs = require("fs");
 const { 
     Product,
     User,
-    Portfolio
+    Portfolio,
+    PurchaseOrder
  } = require("../../models");
 const {
   successResponse,
   errorResponse,
   DeductQuantity,
   deduct,
+  addOrder,
+  tx,
   uniqueId,
   success,
 } = require("../../helpers");
@@ -68,7 +71,9 @@ exports.PurchaseProduct = async (req, res) => {
             throw new Error("Insufficient balance to purchase this item.");
         }
 
-        if (parseFloat(checkProduct.amount) > parseFloat(checkBalance.value)) {
+        let finalAmount = parseFloat(checkProduct.amount) * parseInt(quantity);
+
+        if (finalAmount > parseFloat(checkBalance.value)) {
             throw new Error("Insufficient balance to purchase this item.");
         }
 
@@ -84,17 +89,43 @@ exports.PurchaseProduct = async (req, res) => {
                 processPurchase
             );
 
+            let puPayload = {
+                email,
+                product_id,
+                quantity,
+                amount: finalAmount
+            };
+
+            let placeOrder = await addOrder(
+                puPayload,
+                processPurchase
+            );
+
+            // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
+
             let deductPortfolio = await deduct(
                 email,
                 "EGAX",
                 "portfolio",
                 "value",
-                parseFloat(checkProduct.amount),
+                finalAmount,
                 processPurchase
             );
 
+            let txPayload = {
+                email: req.user.email,
+                to_email: req.user.email,
+                meta: { type: "Product", product_id, quantity, amount: finalAmount, symbol: "EGAX" },
+                amount: finalAmount,
+                type: "PURCHASE",
+                status: "PENDING",
+              };
+              let createTx = await tx(txPayload, processPurchase);
+
             if (
                 !deductQuantity[0][1] &&
+                !placeOrder[0][1] &&
+                !createTx[0][1] &&
                 !deductPortfolio[0][1]
               ) {
                 console.log("kjoijoijoi");

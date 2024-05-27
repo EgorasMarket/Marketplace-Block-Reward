@@ -9,6 +9,8 @@ const {
   ReferralBalance,
   Deposit,
   Bridge,
+  PurchaseOrder,
+  Product
 } = require("../models");
 
 const Sequelize = require("sequelize");
@@ -156,9 +158,43 @@ exports.tx = async (payload, t) => {
   }
 };
 
+exports.addOrder = async (payload, t) => {
+  try {
+    const createTx = await PurchaseOrder.create(payload, { transaction: t });
+
+    if (createTx) {
+      // io.emit(`transaction/${email}`, payload);
+      return [[undefined, 1]];
+    }
+    return [[undefined, 0]];
+  } catch (error) {
+    console.log(error);
+    return [[undefined, 0]];
+  }
+};
+
 exports.Depoxit = async (payload, t) => {
   try {
     const createTx = await Deposit.create(payload, { transaction: t });
+
+    if (createTx) {
+      // io.emit(`transaction/${email}`, payload);
+      return [[undefined, 1]];
+    }
+    return [[undefined, 0]];
+  } catch (error) {
+    console.log(error);
+    return [[undefined, 0]];
+  }
+};
+
+
+exports.DeductQuantity = async (payload, t) => {
+  try {
+    const createTx = await Product.update(
+      { quantity: Sequelize.literal('quantity - '+payload.quantity) },
+      { where: { id: payload.product_id} } 
+    )
 
     if (createTx) {
       // io.emit(`transaction/${email}`, payload);
