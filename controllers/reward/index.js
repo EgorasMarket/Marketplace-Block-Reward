@@ -44,27 +44,26 @@ exports.distribute_reward = async (req, res) => {
 
     if (!rewardConfig) return;
 
-    const amount_in_pool = rewardConfig.reward_pool;
-    let userShare = 0.0;
-    let userReward = 0.0;
+    const amount_in_pool = parseFloat(rewardConfig.reward_pool);
+
     console.log(rewardConfig, "lll");
 
     for (const stake of sumStake) {
-      console.log(stake);
       total_stake += parseFloat(stake.purchase_val);
     }
 
+    const promises = [];
     //get user reward
-
+    console.log(total_stake, "totak_stake");
     for (const stakes of sumStake) {
-      userShare = parseFloat(stakes.purchase_val / total_stake);
-      console.log(userShare, "alal");
+      let userShare = 0.0;
+      let userReward = 0.0;
+      userShare = parseFloat(stakes.purchase_val) / total_stake;
+      console.log(userShare, "user_share");
 
       userReward = amount_in_pool * userShare;
-      console.log(userReward, "blord");
-
-      //update Reward
-      await Stake.update(
+      console.log(userReward, "user_reward");
+      const promise = Stake.update(
         {
           rewards_earned:
             parseFloat(stakes.rewards_earned) + parseFloat(userReward),
@@ -72,12 +71,18 @@ exports.distribute_reward = async (req, res) => {
         {
           where: {
             user_id: stakes.user_id,
+            stake_id: stakes.stake_id,
           },
         }
-      );
-
-      //
+      ).then((res) => {
+        console.log(res);
+      });
+      promises.push(promise);
     }
+
+    Promise.all(promises).then((result) => {
+      console.log(result);
+    });
 
     successResponse(req, res, { rewardConfig, sumStake, total_stake });
   } catch (error) {
