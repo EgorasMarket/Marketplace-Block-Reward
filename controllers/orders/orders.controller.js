@@ -25,6 +25,7 @@ const {
   uniqueId,
   success,
 } = require("../../helpers");
+const { symbol } = require("joi");
 
 
 exports.PurchaseProduct = async (req, res) => {
@@ -65,6 +66,7 @@ exports.PurchaseProduct = async (req, res) => {
         const checkBalance = await Portfolio.findOne({
             where: {
                 email: email,
+                symbol: "EGAX"
             },
         });
 
