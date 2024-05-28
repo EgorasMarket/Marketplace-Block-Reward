@@ -42,6 +42,10 @@ router.get("/all-categories", productController.allCategories);
 router.get("/sold", productController.SoldProductsRecord);
 router.get("/approved", productController.ApprovedProduct);
 
+router.get(
+    "/fetch/product/by/:id",
+    productController.FindOneProduct
+  );
 
 router.get(
   "/category/:category",

@@ -55,6 +55,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      token_type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       amount: DataTypes.DECIMAL,
       token_type: {
         type: DataTypes.STRING,

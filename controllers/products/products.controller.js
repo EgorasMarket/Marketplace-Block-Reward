@@ -591,6 +591,23 @@ exports.AllProducts = async (req, res) => {
   }
 };
 
+exports.FindOneProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const getProduct = await Product.findOne({
+      where: {
+        id,
+      },
+    });
+
+    return successResponse(req, res, getProduct, 200);
+  } catch (err) {
+    return res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
 exports.GenerateProductNFT = async (req, res) => {
   try {
     console.log(req.params);

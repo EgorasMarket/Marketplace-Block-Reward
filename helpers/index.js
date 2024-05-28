@@ -10,7 +10,7 @@ const {
   Deposit,
   Bridge,
   PurchaseOrder,
-  Product
+  Product,
 } = require("../models");
 
 const Sequelize = require("sequelize");
@@ -188,13 +188,12 @@ exports.Depoxit = async (payload, t) => {
   }
 };
 
-
 exports.DeductQuantity = async (payload, t) => {
   try {
     const createTx = await Product.update(
-      { quantity: Sequelize.literal('quantity - '+payload.quantity) },
-      { where: { id: payload.product_id} } 
-    )
+      { quantity: Sequelize.literal("quantity - " + payload.quantity) },
+      { where: { id: payload.product_id } }
+    );
 
     if (createTx) {
       // io.emit(`transaction/${email}`, payload);
