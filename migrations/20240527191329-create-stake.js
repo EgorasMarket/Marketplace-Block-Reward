@@ -19,19 +19,21 @@ module.exports = {
         type: Sequelize.DECIMAL,
       },
       start_date: {
-        type: Sequelize.STRING,
+        type: Sequelize.DATE,
       },
       end_date: {
-        type: Sequelize.STRING,
+        type: Sequelize.DATE,
       },
       rewards_earned: {
         type: Sequelize.DECIMAL,
       },
       nft_id: {
         type: Sequelize.STRING(2000),
+        allowNull: true,
       },
       purchase_val: {
         type: Sequelize.DECIMAL(10),
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,

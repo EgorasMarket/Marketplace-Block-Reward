@@ -7,20 +7,31 @@ const uuid = require("uuid").v4;
 
 var fs = require("fs");
 
-const { Product, User, Portfolio } = require("../../models");
+const {
+  Product,
+  User,
+  Portfolio,
+
+  Stake,
+} = require("../../models");
 const {
   successResponse,
   errorResponse,
   DeductQuantity,
   deduct,
-  Stake,
+  addOrder,
+  tx,
+  add,
 } = require("../../helpers");
+
+// //send the user the relevant 404 token to managed wallet
 
 exports.PurchaseProduct = async (req, res) => {
   try {
     const { product_id, quantity } = req.body;
 
     const { userId, email } = req.user;
+    console.log(req.user);
 
     console.log(product_id, quantity, email, "ooio");
 
@@ -51,6 +62,7 @@ exports.PurchaseProduct = async (req, res) => {
     const checkBalance = await Portfolio.findOne({
       where: {
         email: email,
+        symbol: "EGAX",
       },
     });
 
@@ -58,7 +70,9 @@ exports.PurchaseProduct = async (req, res) => {
       throw new Error("Insufficient balance to purchase this item.");
     }
 
-    if (parseFloat(checkProduct.amount) > parseFloat(checkBalance.value)) {
+    let finalAmount = parseFloat(checkProduct.amount) * parseInt(quantity);
+
+    if (finalAmount > parseFloat(checkBalance.value)) {
       throw new Error("Insufficient balance to purchase this item.");
     }
 
@@ -70,39 +84,135 @@ exports.PurchaseProduct = async (req, res) => {
       };
       let deductQuantity = await DeductQuantity(depPayload, processPurchase);
 
+      let puPayload = {
+        email,
+        product_id,
+        quantity,
+        amount: finalAmount,
+      };
+
+      let placeOrder = await addOrder(puPayload, processPurchase);
+
+      // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
+      // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
+
       let deductPortfolio = await deduct(
         email,
         "EGAX",
         "portfolio",
         "value",
-        parseFloat(checkProduct.amount),
+        finalAmount,
         processPurchase
       );
 
-      if (!deductQuantity[0][1] && !deductPortfolio[0][1]) {
+      let txPayload = {
+        email: req.user.email,
+        to_email: req.user.email,
+        meta: {
+          type: "Product",
+          product_id,
+          quantity,
+          amount: finalAmount,
+          symbol: "EGAX",
+        },
+        amount: finalAmount,
+        type: "PURCHASE",
+        status: "PENDING",
+      };
+      let createTx = await tx(txPayload, processPurchase);
+      const prod_stake = await ProductStake(
+        {
+          product: checkProduct,
+          quantity,
+          user: req.user,
+          // user_id: isUser.id,
+          purchase_val: finalAmount,
+          transaction: processPurchase,
+        },
+        {
+          transaction: processPurchase,
+        }
+      );
+      if (
+        !deductQuantity[0][1] &&
+        !placeOrder[0][1] &&
+        !createTx[0][1] &&
+        !deductPortfolio[0][1] &&
+        !prod_stake
+      ) {
         console.log("kjoijoijoi");
         processPurchase.rollback();
       }
+      // await fundUserWalletOnSuccessfulPurchase();
+      //run the stake algorithm to ensure workability
     });
 
-    //send the user the relevant 404 token to managed wallet
-    await fundUserWalletOnSuccessfulPurchase();
-    //run the stake algorithm to ensure workability
-    await ProductStake({ product: checkProduct, quantity, user_id: isUser.id });
     return successResponse(req, res, {});
   } catch (error) {
     return errorResponse(req, res, error.message);
   }
 };
 
-const fundUserWalletOnSuccessfulPurchase = async () => {};
+const fundUserWalletOnSuccessfulPurchase = async ({ stake_id, user_id }) => {};
 
-const ProductStake = async ({ product, user_id, quantity }) => {
+const ProductStake = async ({
+  product,
+  user,
+  quantity,
+  purchase_val,
+  transaction,
+}) => {
+  //fetch token_id =
+  const { userId, email } = user;
   //grab the product and extract the token type
 
-  const { token_type } = product; //extract the token type from payload
+  try {
+    const { token_type } = product; //extract the token type from payload
 
-  await Stake.create({});
+    const result = await Stake.create(
+      {
+        user_id: userId,
+        token_id: token_type,
+        amount_staked: quantity,
+        start_date: new Date(),
+        rewards_earned: 0.0,
+        purchase_val,
+      },
+      {
+        transaction,
+      }
+    );
+
+    //add to portfolio
+
+    const addToPortfolio = await add(
+      email,
+      token_type,
+      "portfolio",
+      "value",
+      quantity,
+      transaction
+    );
+
+    if (result && addToPortfolio) {
+      console.log("result yes");
+      return {
+        success: true,
+      };
+    }
+    return {
+      success: false,
+      error: "cannot complete",
+    };
+  } catch (err) {
+    console.log("result no");
+    console.log(err.message);
+
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
 
   //collect user information and token info then add to stake table
 };
