@@ -30,7 +30,7 @@ const { symbol } = require("joi");
 
 exports.PurchaseProduct = async (req, res) => {
   try {
-    const { product_id, quantity } = req.body;
+    const { product_id, quantity, deliveryMethod } = req.body;
 
     const { userId, email } = req.user;
     console.log(req.user);
@@ -91,6 +91,7 @@ exports.PurchaseProduct = async (req, res) => {
         product_id,
         quantity,
         amount: finalAmount,
+        deliveryType: deliveryMethod
       };
 
       let placeOrder = await addOrder(puPayload, processPurchase);

@@ -361,7 +361,10 @@ exports.swapSignup = async (req, res) => {
 
     const newUser = await User.create(payload, { transaction: t });
 
-    if (referral !== "") {
+    console.log(referral, "jjjuuuu");
+
+    if (referral != "") {
+      console.log('jiiji');
       const findRef = await User.scope("withSecretColumns").findOne({
         where: { swapRef: referral },
       });
@@ -417,7 +420,7 @@ exports.swapSignup = async (req, res) => {
       //   dynamic_template_data
       // );
 
-      await newActivity({
+      await this.newActivity({
         user_email: email,
         message: ` ${email} have successfully Signed Up`,
         status: activity_status.success,
@@ -528,6 +531,72 @@ exports.login = async (req, res) => {
       type: "Authentication",
     });
     return errorResponse(req, res, error.message);
+  }
+};
+
+exports.refererCount = async (req, res) => {
+  // const error = validationResult(req);
+  // if (!error.isEmpty()) {
+  //   return res.send({
+  //     error: error.array(),
+  //   });
+  // }
+  try {
+    // const { userAddress } = req.params;
+
+    const { userId } = req.user;
+
+    //check validity of user address
+    const isUser = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    if (!isUser) throw new Error("Invalid user credentials");
+
+    let referCount = await Referral.findAndCountAll({
+      where: { refererId: isUser.swapRef },
+    });
+
+    const getReferrers = await Referral.findAll({
+      attributes: ["userId", "username", "amount", "status"],
+      where: {
+        refererId: isUser.swapRef,
+      },
+    });
+
+    res.status(200).send({
+      statusCode: 200,
+      success: true,
+      message: "Referal count retrieved",
+      count: referCount.count,
+      data: getReferrers,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      errors: [{ msg: error.message }],
+    });
+  }
+};
+
+exports.getLeaderBoard = async (req, res) => {
+  try {
+    const [leaderboard, metadata] = await db.sequelize.query(
+      "SELECT COUNT(r.refererId) AS refCount, u.username FROM Referrals r JOIN Users u ON r.refererId = u.swapRef WHERE r.refererId != '' GROUP BY r.refererId, u.username"
+    );
+
+    res.status(200).send({
+      statusCode: 200,
+      success: true,
+      message: "Leaderboard retrieved",
+      data: leaderboard,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      errors: [{ msg: error.message }],
+    });
   }
 };
 
