@@ -7,13 +7,14 @@ const uuid = require("uuid").v4;
 
 var fs = require("fs");
 
-const {
-  Product,
-  User,
-  Portfolio,
-
-  Stake,
-} = require("../../models");
+const { 
+    Product,
+    User,
+    Portfolio,
+    PurchaseOrder,
+    DeliveryDetails,
+    Stake
+ } = require("../../models");
 const {
   successResponse,
   errorResponse,
@@ -133,6 +134,8 @@ exports.PurchaseProduct = async (req, res) => {
           transaction: processPurchase,
         }
       );
+
+      console.log(prod_stake, 'jjjji');
       if (
         !deductQuantity[0][1] &&
         !placeOrder[0][1] &&
@@ -142,15 +145,54 @@ exports.PurchaseProduct = async (req, res) => {
       ) {
         console.log("kjoijoijoi");
         processPurchase.rollback();
+        return errorResponse(req, res, {message: "An error eccurred, try again"});
+      } else {
+        return successResponse(req, res, {});
       }
       // await fundUserWalletOnSuccessfulPurchase();
       //run the stake algorithm to ensure workability
     });
 
-    return successResponse(req, res, {});
   } catch (error) {
     return errorResponse(req, res, error.message);
   }
+};
+
+exports.SubmitDelivery = async (req, res) => {
+    try {
+        const {
+            fullname,
+            phoneNumber,
+            country,
+            telegramId
+        } = req.body;
+
+        const { userId, email } = req.user;
+
+        console.log(
+            fullname,
+            phoneNumber,
+            country,
+            telegramId
+        );
+
+        await DeliveryDetails.create(
+            { 
+                email,
+                fullname,
+                phoneNumber,
+                country,
+                telegramId,
+            },
+            
+          );
+
+       
+    
+      return successResponse(req, res, {  });
+    } catch (error) {
+      return errorResponse(req, res, error.message);
+    }
 };
 
 const fundUserWalletOnSuccessfulPurchase = async ({ stake_id, user_id }) => {};
