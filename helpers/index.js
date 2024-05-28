@@ -164,7 +164,7 @@ exports.addOrder = async (payload, t) => {
 
     if (createTx) {
       // io.emit(`transaction/${email}`, payload);
-      return [[undefined, 1]];
+      return [[undefined, 1, createTx]];
     }
     return [[undefined, 0]];
   } catch (error) {

@@ -1,3 +1,5 @@
+const axios = require("axios").default;
+
 const db = require("../../config/sequelize");
 const { Op } = require("sequelize");
 const imgur = require("imgur");
@@ -11,9 +13,12 @@ const {
   Product,
   User,
   Portfolio,
-
+  PurchaseOrder,
+  DeliveryDetails,
+  Asset,
   Stake,
 } = require("../../models");
+
 const {
   successResponse,
   errorResponse,
@@ -23,6 +28,7 @@ const {
   tx,
   add,
 } = require("../../helpers");
+const { symbol } = require("joi");
 
 // //send the user the relevant 404 token to managed wallet
 
@@ -93,6 +99,7 @@ exports.PurchaseProduct = async (req, res) => {
 
       let placeOrder = await addOrder(puPayload, processPurchase);
 
+      console.log(placeOrder[0][2].id, "makachi");
       // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
       // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
 
@@ -128,6 +135,7 @@ exports.PurchaseProduct = async (req, res) => {
           // user_id: isUser.id,
           purchase_val: finalAmount,
           transaction: processPurchase,
+          purchase_id: placeOrder[0][2].id,
         },
         {
           transaction: processPurchase,
@@ -161,6 +169,7 @@ const ProductStake = async ({
   quantity,
   purchase_val,
   transaction,
+  purchase_id,
 }) => {
   //fetch token_id =
   const { userId, email } = user;
@@ -177,6 +186,7 @@ const ProductStake = async ({
         start_date: new Date(),
         rewards_earned: 0.0,
         purchase_val,
+        purchase_id,
       },
       {
         transaction,
@@ -200,6 +210,7 @@ const ProductStake = async ({
         success: true,
       };
     }
+
     return {
       success: false,
       error: "cannot complete",
@@ -213,6 +224,522 @@ const ProductStake = async ({
       error: err.message,
     };
   }
-
   //collect user information and token info then add to stake table
 };
+
+exports.SubmitDelivery = async (req, res) => {
+  try {
+    const { fullname, phoneNumber, country, telegramId } = req.body;
+
+    const { userId, email } = req.user;
+
+    console.log(fullname, phoneNumber, country, telegramId);
+
+    await DeliveryDetails.create({
+      email,
+      fullname,
+      phoneNumber,
+      country,
+      telegramId,
+    });
+
+    return successResponse(req, res, {});
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
+
+// export const settleCashoutCrypto = async ({}) => {
+//   try {
+//     const pendingTransaction = await Transactions.findAll({
+//       where: { status: "ADMIN_APPROVED", type: "WIITHDRAWAL" },
+//     });
+
+//     // console.log(allAssets);
+
+//     pendingTransaction.map(async (cashout, index) => {
+//       console.log(JSON.parse(cashout.meta).wallet_address);
+//       let walletNew = JSON.parse(cashout.meta).wallet_address;
+//       let amount = JSON.parse(cashout.meta).to_send;
+//       let symbol = JSON.parse(cashout.meta).symbol;
+//       let networks = JSON.parse(cashout.meta).network;
+
+//       function removeWhitespace(str) {
+//         return str.replace(/\s/g, "");
+//       }
+
+//       const wallet = removeWhitespace(walletNew);
+
+//       let mainValue = parseFloat(amount) * 1000000000000000000;
+
+//       if (symbol === "USD" || symbol === "EGC" || symbol === "ESTA") {
+//         // const allAssets = await Asset.findOne({
+//         //   where: { symbol },
+//         // });
+
+//         // console.log(allAssets.contract, "dndnd");
+//         // console.log(allAssets.contract, "dndnd");
+
+//         const updateTransaction = await Transactions.update(
+//           { status: "FAILED" },
+//           { where: { id: cashout.id } }
+//         );
+//         console.log(updateTransaction[0]); //FAILED
+
+//         const lowercaseString = networks.toLowerCase();
+
+//         if (symbol === "USD" && lowercaseString === "egochain") {
+//           const newAsset = await Asset.findOne({
+//             where: { symbol: symbol + "E" },
+//           });
+//           if (updateTransaction[0]) {
+//             let blockChainPayload = {
+//               privateKey: process.env.PVCT,
+//               contractAddress: newAsset.contract,
+//               method: "transfer",
+//               rpcURL: "https://mainnet.egochain.org",
+//               params: [`${wallet}`, `${mainValue}`],
+//               type: "write",
+//               abi: [
+//                 {
+//                   constant: false,
+//                   inputs: [
+//                     {
+//                       name: "_to",
+//                       type: "address",
+//                     },
+//                     {
+//                       name: "_value",
+//                       type: "uint256",
+//                     },
+//                   ],
+//                   name: "transfer",
+//                   outputs: [
+//                     {
+//                       name: "",
+//                       type: "bool",
+//                     },
+//                   ],
+//                   payable: false,
+//                   stateMutability: "nonpayable",
+//                   type: "function",
+//                 },
+//               ],
+//             };
+
+//             // console.log(blockChainPayload);
+
+//             // Make a POST request using Axios
+//             axios
+//               .post(
+//                 "https://bx.hollox.finance/mcw/send/to/erc20/chains",
+//                 blockChainPayload
+//                 // config
+//               )
+//               .then((response) => {
+//                 // Handle successful response here
+//                 console.log("Response data:", response.data.data.data.data);
+
+//                 let ffff = {
+//                   ...response.data.data.data.data,
+//                   ...JSON.parse(cashout.meta),
+//                 };
+
+//                 if (response.data.success == true) {
+//                   Transactions.update(
+//                     { status: "SUCCESS", meta: ffff },
+//                     { where: { id: cashout.id } }
+//                   );
+//                 }
+//               })
+//               .catch((error) => {
+//                 // Handle error here
+//                 console.error("Error: Withdrawal failed");
+//               })
+//               .finally(() => {
+//                 // This block is executed regardless of success or failure
+//                 console.log("Request completed");
+//               });
+//           }
+//         } else if (symbol === "ESTA" && lowercaseString === "egochain") {
+//           const newAsset = await Asset.findOne({
+//             where: { symbol: symbol + "E" },
+//           });
+//           if (updateTransaction[0]) {
+//             let blockChainPayload = {
+//               privateKey: process.env.PVCT,
+//               contractAddress: newAsset.contract,
+//               method: "transfer",
+//               rpcURL: "https://mainnet.egochain.org",
+//               params: [`${wallet}`, `${mainValue}`],
+//               type: "write",
+//               abi: [
+//                 {
+//                   inputs: [
+//                     {
+//                       internalType: "address",
+//                       name: "to_",
+//                       type: "address",
+//                     },
+//                     {
+//                       internalType: "uint256",
+//                       name: "value_",
+//                       type: "uint256",
+//                     },
+//                   ],
+//                   name: "transfer",
+//                   outputs: [
+//                     {
+//                       internalType: "bool",
+//                       name: "",
+//                       type: "bool",
+//                     },
+//                   ],
+//                   stateMutability: "nonpayable",
+//                   type: "function",
+//                 },
+//               ],
+//             };
+
+//             // console.log(blockChainPayload);
+
+//             // Make a POST request using Axios
+//             axios
+//               .post(
+//                 "https://bx.hollox.finance/mcw/send/to/erc20/chains",
+//                 blockChainPayload
+//                 // config
+//               )
+//               .then((response) => {
+//                 // Handle successful response here
+//                 console.log("Response data:", response.data.data.data.data);
+
+//                 let ffff = {
+//                   ...response.data.data.data.data,
+//                   ...JSON.parse(cashout.meta),
+//                 };
+
+//                 if (response.data.success == true) {
+//                   Transactions.update(
+//                     { status: "SUCCESS", meta: ffff },
+//                     { where: { id: cashout.id } }
+//                   );
+//                 }
+//               })
+//               .catch((error) => {
+//                 // Handle error here
+//                 console.error("Error: Withdrawal failed");
+//               })
+//               .finally(() => {
+//                 // This block is executed regardless of success or failure
+//                 console.log("Request completed");
+//               });
+//           }
+//         } else if (
+//           symbol === "ESTA" &&
+//           (networks === "Ethereum (ERC20)" || lowercaseString === "ethereum")
+//         ) {
+//           const newAsset = await Asset.findOne({
+//             where: { symbol: symbol },
+//           });
+//           if (updateTransaction[0]) {
+//             // contract, address, privateKey, amount;
+
+//             let blockChainPayload = {
+//               privateKey: process.env.PVCT,
+//               contractAddress: newAsset.contract,
+//               method: "transfer",
+//               rpcURL: "https://eth.drpc.org",
+//               params: [`${wallet}`, `${mainValue}`],
+//               type: "write",
+//               abi: [
+//                 {
+//                   constant: false,
+//                   inputs: [
+//                     {
+//                       name: "_to",
+//                       type: "address",
+//                     },
+//                     {
+//                       name: "_value",
+//                       type: "uint256",
+//                     },
+//                   ],
+//                   name: "transfer",
+//                   outputs: [
+//                     {
+//                       name: "",
+//                       type: "bool",
+//                     },
+//                   ],
+//                   payable: false,
+//                   stateMutability: "nonpayable",
+//                   type: "function",
+//                 },
+//               ],
+//             };
+//             // let blockChainPayload = {
+//             //   privateKey: process.env.PVCT,
+//             //   contract: newAsset.contract,
+//             //   amount: mainValue,
+//             //   address: wallet,
+//             // };
+
+//             // console.log(blockChainPayload);
+
+//             // Make a POST request using Axios
+//             axios
+//               .post(
+//                 "https://bx.hollox.finance/mcw/send/to/erc20/chains",
+//                 blockChainPayload
+//                 // config
+//               )
+//               .then((response) => {
+//                 // Handle successful response here
+//                 console.log("Response data:", response.data.data.data.data);
+
+//                 let ffff = {
+//                   ...response.data.data.data.data,
+//                   ...JSON.parse(cashout.meta),
+//                 };
+
+//                 if (response.data.success == true) {
+//                   Transactions.update(
+//                     { status: "SUCCESS", meta: ffff },
+//                     { where: { id: cashout.id } }
+//                   );
+//                 }
+//               })
+//               .catch((error) => {
+//                 // Handle error here
+//                 console.error("Error: Withdrawal failed");
+//               })
+//               .finally(() => {
+//                 // This block is executed regardless of success or failure
+//                 console.log("Request completed");
+//               });
+//           }
+//         } else {
+//           const newAsset = await Asset.findOne({
+//             where: { symbol: symbol },
+//           });
+//           if (updateTransaction[0]) {
+//             let blockChainPayload = {
+//               privateKey: process.env.PVCT,
+//               contractAddress: newAsset.contract,
+//               method: "transfer",
+//               rpcURL: "https://bsc-dataseed1.binance.org",
+//               params: [`${wallet}`, `${mainValue}`],
+//               type: "write",
+//               abi: [
+//                 {
+//                   constant: false,
+//                   inputs: [
+//                     {
+//                       name: "_to",
+//                       type: "address",
+//                     },
+//                     {
+//                       name: "_value",
+//                       type: "uint256",
+//                     },
+//                   ],
+//                   name: "transfer",
+//                   outputs: [
+//                     {
+//                       name: "",
+//                       type: "bool",
+//                     },
+//                   ],
+//                   payable: false,
+//                   stateMutability: "nonpayable",
+//                   type: "function",
+//                 },
+//               ],
+//             };
+
+//             // console.log(blockChainPayload);
+
+//             // Make a POST request using Axios
+//             axios
+//               .post(
+//                 "https://bx.hollox.finance/mcw/send/to/erc20/chains",
+//                 blockChainPayload
+//                 // config
+//               )
+//               .then((response) => {
+//                 // Handle successful response here
+//                 console.log("Response data:", response.data.data.data.data);
+
+//                 let ffff = {
+//                   ...response.data.data.data.data,
+//                   ...JSON.parse(cashout.meta),
+//                 };
+
+//                 if (response.data.success == true) {
+//                   Transactions.update(
+//                     { status: "SUCCESS", meta: ffff },
+//                     { where: { id: cashout.id } }
+//                   );
+//                 }
+//               })
+//               .catch((error) => {
+//                 // Handle error here
+//                 console.error("Error: Withdrawal failed");
+//               })
+//               .finally(() => {
+//                 // This block is executed regardless of success or failure
+//                 console.log("Request completed");
+//               });
+//           }
+//         }
+//       } else {
+//         const updateTransaction = await Transactions.update(
+//           { status: "FAILED" },
+//           { where: { id: cashout.id } }
+//         );
+//         console.log(updateTransaction[0]); //FAILED
+
+//         if (updateTransaction[0]) {
+//           let blockChainPayload = {
+//             recipientAddress: wallet,
+//             amount: parseFloat(amount),
+//             network: "ethereum",
+//             rpcUrl: "https://mainnet.egochain.org",
+//             privateKey: process.env.EGAXDIS,
+//           };
+
+//           try {
+//             // Make a POST request using Axios
+//             await axios
+//               .post(
+//                 "https://bx.hollox.finance/mcw/send/evm/token",
+//                 blockChainPayload
+//                 // config
+//               )
+//               .then((response) => {
+//                 // Handle successful response here
+//                 console.log("Response:", response.data.data);
+
+//                 let ffff = {
+//                   ...response.data.data,
+//                   ...JSON.parse(cashout.meta),
+//                 };
+//                 // console.log(ffff);
+
+//                 if (response.data.success == true) {
+//                   Transactions.update(
+//                     { status: "SUCCESS", meta: ffff },
+//                     { where: { id: cashout.id } }
+//                   );
+//                   console.log("Your EGAX Token is on the way!!");
+//                   // return successResponse(req, res, {
+//                   //   message: `Your EGAX Token is on the way!!!`,
+//                   // });
+//                 }
+//               })
+//               .catch((error) => {
+//                 // Handle error here
+//                 console.error("Error: Failed", error);
+//               });
+//           } catch (error) {
+//             console.log(error);
+//           }
+//         }
+//       }
+//     });
+//     return successResponse(req, res, {});
+//   } catch (error) {
+//     console.log("error");
+//     console.log(error);
+//     return errorResponse(req, res, error.message);
+//   }
+// };
+
+exports.settle = async ({
+  wallet,
+  symbol,
+  network,
+  amount,
+  user_id,
+  stake_id,
+}) => {
+  //OBTAIN CONTRACT ADDRESS USING SYMBOL
+  const asset = Asset.findOne({
+    where: {
+      symbol,
+    },
+  });
+  if (!asset)
+    return {
+      success: false,
+    };
+
+  let blockChainPayload = {
+    privateKey: process.env.PVCT,
+    contractAddress: asset.contract,
+    method: "transfer",
+    rpcURL: "https://mainnet.egochain.org",
+    params: [`${wallet}`, `${amount}`],
+    type: "write",
+    abi: [
+      {
+        constant: false,
+        inputs: [
+          {
+            name: "_to",
+            type: "address",
+          },
+          {
+            name: "_value",
+            type: "uint256",
+          },
+        ],
+        name: "transfer",
+        outputs: [
+          {
+            name: "",
+            type: "bool",
+          },
+        ],
+        payable: false,
+        stateMutability: "nonpayable",
+        type: "function",
+      },
+    ],
+  };
+
+  axios
+    .post(
+      "https://bx.hollox.finance/mcw/send/to/erc20/chains",
+      blockChainPayload
+      // config
+    )
+    .then((response) => {
+      // Handle successful response here
+      console.log("Response data:", response.data.data.data.data);
+
+      let ffff = {
+        ...response.data.data.data.data,
+        ...JSON.parse(cashout.meta),
+      };
+
+      if (response.data.success == true) {
+        // Transactions.update(
+        //   { status: "SUCCESS", meta: ffff },
+        //   { where: { id: cashout.id } }
+        // );
+      }
+    })
+    .catch((error) => {
+      // Handle error here
+      console.error("Error: Withdrawal failed");
+    })
+    .finally(() => {
+      // This block is executed regardless of success or failure
+      console.log("Request completed");
+    });
+};
+function removeWhitespace(str) {
+  return str.replace(/\s/g, "");
+}
