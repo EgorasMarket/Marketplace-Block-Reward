@@ -27,6 +27,7 @@ const {
 const { symbol } = require("joi");
 
 // //send the user the relevant 404 token to managed wallet
+// //send the user the relevant 404 token to managed wallet
 
 exports.PurchaseProduct = async (req, res) => {
   try {
