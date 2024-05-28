@@ -63,7 +63,7 @@ jobs:
           
     - name: 'Restart server'
       run: |
-          pm2 restart 9
+          pm2 restart 11
          
          
 
