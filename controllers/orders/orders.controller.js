@@ -12,7 +12,8 @@ const {
     Product,
     User,
     Portfolio,
-    PurchaseOrder
+    PurchaseOrder,
+    DeliveryDetails
  } = require("../../models");
 const {
   successResponse,
@@ -134,6 +135,44 @@ exports.PurchaseProduct = async (req, res) => {
               }
             
         });
+    
+      return successResponse(req, res, {  });
+    } catch (error) {
+      return errorResponse(req, res, error.message);
+    }
+};
+
+
+exports.SubmitDelivery = async (req, res) => {
+    try {
+        const {
+            fullname,
+            phoneNumber,
+            country,
+            telegramId
+        } = req.body;
+
+        const { userId, email } = req.user;
+
+        console.log(
+            fullname,
+            phoneNumber,
+            country,
+            telegramId
+        );
+
+        await DeliveryDetails.create(
+            { 
+                email,
+                fullname,
+                phoneNumber,
+                country,
+                telegramId,
+            },
+            
+          );
+
+       
     
       return successResponse(req, res, {  });
     } catch (error) {
