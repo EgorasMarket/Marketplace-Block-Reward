@@ -10,6 +10,7 @@ const {
   userActivity,
   ReferralCode,
   ReferralList,
+  Referral
 } = require("../../models");
 
 const {
@@ -271,6 +272,159 @@ exports.register = async (req, res) => {
         tunnel: activity_tunnel.user,
         type: "Registration",
       });
+      await t.commit();
+      return successResponse(req, res, {});
+    }
+  } catch (error) {
+    console.log(error);
+    await t.rollback();
+    return errorResponse(req, res, error.message);
+  }
+};
+
+exports.swapSignup = async (req, res) => {
+  let t;
+
+  const emailId = uuidv4();
+
+  try {
+    t = await db.sequelize.transaction();
+    const { email, password, username, phone, countrycode, referral } = req.body;
+
+    const user = await User.scope("withSecretColumns").findOne({
+      where: { email },
+    });
+
+    const userUsername = await User.scope("withSecretColumns").findOne({
+      where: { username },
+    });
+
+    const userPhone = await User.scope("withSecretColumns").findOne({
+      where: { phone },
+    });
+
+    if (user) {
+      await newActivity({
+        user_email: email,
+        message: " Tried to Create another account with same email",
+        status: activity_status.failure,
+        tunnel: activity_tunnel.user,
+        type: "Authentication",
+      });
+      throw new Error("User already exists with same email");
+    }
+    if (userUsername) {
+      await this.newActivity({
+        user_email: email,
+        message: ` ${email} attempted signing up with username: ${username} that is already in use`,
+        status: activity_status.failure,
+        tunnel: activity_tunnel.user,
+        type: "Authentication",
+      });
+      throw new Error("User already exists with same username");
+    }
+    if (userPhone) {
+      await this.newActivity({
+        user_email: email,
+        message: ` ${email} attempted signing up with phone Number: ${phone} that is already in use`,
+        status: activity_status.failure,
+        tunnel: activity_tunnel.user,
+        type: "Authentication",
+      });
+      throw new Error("User already exists with same phone number");
+    }
+
+    const salt = await bcrypt.genSalt(parseInt(process.env.SALTROUNDS));
+    const reqPass = bcrypt.hashSync(password, parseInt(salt));
+    const rCode = Math.floor(1000 + Math.random() * 9000);
+
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let code = "";
+
+    for (let i = 0; i < 10; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      code += characters.charAt(randomIndex);
+    }
+
+    const payload = {
+      email,
+      username,
+      phone,
+      countrycode,
+      emailId,
+      swapRef: code,
+      password: reqPass,
+      isVerified: countrycode == "+234" ? false : true,
+      isVerified: true,
+      isNew: true,
+    };
+
+    const newUser = await User.create(payload, { transaction: t });
+
+    if (referral !== "") {
+      const findRef = await User.scope("withSecretColumns").findOne({
+        where: { swapRef: referral },
+      });
+
+      if (findRef) {
+        const payload2 = {
+          // id: refId,
+          userId: code,
+          username: username,
+          refererId: referral,
+        };
+
+        console.log(payload2);
+
+        const addReferal = await Referral.create(payload2, {
+          transaction: t,
+        });
+      }
+    }
+    // // add Referral
+    // if (req.body.referral != undefined && req.body.referral != "") {
+    //   const checkReferralCode = await ReferralCode.findOne({
+    //     where: { referral },
+    //   });
+    //   if (checkReferralCode) {
+    //     await ReferralList.create(
+    //       { referred: checkReferralCode.user, email: email },
+    //       { transaction: t }
+    //     );
+    //   }
+    // }
+
+    // end of add referral
+    if (newUser) {
+      // let origin = req.headers.origin;
+      // console.log(origin, "mgbaa");
+
+      // console.log(origin);
+      // const parts = payload.email.split("@");
+      // let dynamic_template_data = {};
+
+      // dynamic_template_data = {
+      //   code: rCode,
+      //   vId: emailId,
+      //   subject: "Egoras Email Verification",
+      //   name: `${parts[0]}`,
+      // };
+
+      // sendTemplate(
+      //   payload.email,
+      //   process.env.FROM,
+      //   process.env.EMAILVERIFICATION_TEMPLATE_ID,
+      //   dynamic_template_data
+      // );
+
+      await newActivity({
+        user_email: email,
+        message: ` ${email} have successfully Signed Up`,
+        status: activity_status.success,
+        tunnel: activity_tunnel.user,
+        type: "Registration",
+      });
+
       await t.commit();
       return successResponse(req, res, {});
     }

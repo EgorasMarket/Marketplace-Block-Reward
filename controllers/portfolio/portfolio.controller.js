@@ -64,6 +64,23 @@ exports.getPortfolios = async (req, res) => {
   }
 };
 
+
+
+exports.getUserStakeEarnings = async (req, res) => {
+  try {
+    let user = req.user.email;
+
+    let query = `SELECT Stakes.token_id, Stakes.amount_staked, Stakes.start_date, Stakes.rewards_earned, Stakes.nft_id, Products.product_name, Products.product_images FROM Stakes JOIN PurchaseOrders ON PurchaseOrders.id=Stakes.purchase_id JOIN Products ON PurchaseOrders.product_id=Products.id WHERE PurchaseOrders.email='${user}'`;
+      const result = await db.sequelize.query(query);
+      console.log(result, "llll");
+    
+    // console.log(result);
+    return successResponse(req, res, result[0]);
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
+
 exports.fetchTransactionHistory = async (req, res) => {
   console.log(req.query.page, req.query.limit, "Kkkkkk");
   try {
@@ -93,3 +110,5 @@ exports.getSpecificPortfolios = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
+
+

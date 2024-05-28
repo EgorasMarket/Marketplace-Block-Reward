@@ -196,43 +196,21 @@ exports.SubmitDelivery = async (req, res) => {
     }
 };
 
+exports.getBoughtProducts = async (req, res) => {
+  try {
+    let user = req.user.email;
 
-exports.SubmitDelivery = async (req, res) => {
-    try {
-        const {
-            fullname,
-            phoneNumber,
-            country,
-            telegramId
-        } = req.body;
-
-        const { userId, email } = req.user;
-
-        console.log(
-            fullname,
-            phoneNumber,
-            country,
-            telegramId
-        );
-
-        await DeliveryDetails.create(
-            { 
-                email,
-                fullname,
-                phoneNumber,
-                country,
-                telegramId,
-            },
-            
-          );
-
-       
+    let query = `SELECT PurchaseOrders.*, Products.product_name, Products.product_images, Products.product_brand FROM PurchaseOrders JOIN Products ON PurchaseOrders.product_id = Products.id JOIN Users ON Users.email = PurchaseOrders.email WHERE Users.email = '${user}'`;
+      const result = await db.sequelize.query(query);
+      console.log(result, "llll");
     
-      return successResponse(req, res, {  });
-    } catch (error) {
-      return errorResponse(req, res, error.message);
-    }
+    // console.log(result);
+    return successResponse(req, res, result[0]);
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
 };
+
 const fundUserWalletOnSuccessfulPurchase = async ({ stake_id, user_id }) => {};
 
 const ProductStake = async ({
