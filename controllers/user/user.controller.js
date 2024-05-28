@@ -287,6 +287,7 @@ exports.swapSignup = async (req, res) => {
   let t;
 
   const emailId = uuidv4();
+  // const emailId = uuidv4();
 
   try {
     t = await db.sequelize.transaction();
