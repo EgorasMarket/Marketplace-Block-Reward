@@ -363,10 +363,7 @@ exports.swapSignup = async (req, res) => {
 
     const newUser = await User.create(payload, { transaction: t });
 
-    console.log(referral, "jjjuuuu");
-
-    if (referral != "") {
-      console.log('jiiji');
+    if (referral !== "") {
       const findRef = await User.scope("withSecretColumns").findOne({
         where: { swapRef: referral },
       });
