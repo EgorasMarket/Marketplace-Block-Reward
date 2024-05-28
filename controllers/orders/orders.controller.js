@@ -169,8 +169,6 @@ exports.PurchaseProduct = async (req, res) => {
   }
 };
 
-const fundUserWalletOnSuccessfulPurchase = async ({ stake_id, user_id }) => {};
-
 const ProductStake = async ({
   product,
   user,

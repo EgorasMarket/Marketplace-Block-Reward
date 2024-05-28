@@ -67,6 +67,7 @@ app.use("/api/deposit", apiMiddleware.apiAuth, depositProtected);
 app.use("/portfolio", apiMiddleware.apiAuth, portfolio);
 app.use("/kyc", apiMiddleware.apiAuth, kyc);
 app.use("/pub", require("./routes/pub"));
+app.use("/pub/rewards", require("./routes/reward/public"));
 app.use("/web3", web3);
 
 // Not Found error handler
