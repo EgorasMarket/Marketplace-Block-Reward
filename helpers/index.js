@@ -127,7 +127,7 @@ exports.nt = async (payload, t) => {
   try {
     const createTx = await Notification.create(payload, { transaction: t });
     if (createTx) {
-      if (tunnel === activity_tunnel.admin) {
+      if (tunnel === this.activity_tunnel.admin) {
         console.log("it is admin");
         // const realtime = getAblyInstance();
         const channel = realtime.channels.get("admin-notification");

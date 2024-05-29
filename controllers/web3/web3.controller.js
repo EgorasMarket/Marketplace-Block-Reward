@@ -37,6 +37,7 @@ const {
   // Coingecko,
   PriceOracle,
   LiquidityPoolBalance,
+  Portfolio,
 } = require("../../models/index");
 require("dotenv").config();
 const Web3 = require("web3");
@@ -582,6 +583,16 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
           meta: result.data.data,
           email: email,
         });
+        await Portfolio.create(
+          {
+            symbol: symbol,
+            email: email,
+            value: 0.0,
+            in_trade: 0.0,
+            type: "CRYPTO",
+          },
+          // { transaction: t }
+        );
       } else {
         console.log("vvv");
         await Wallet.create({
@@ -590,6 +601,16 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
           meta: result.data.data,
           email: email,
         });
+        await Portfolio.create(
+          {
+            symbol: symbol,
+            email: email,
+            value: 0.0,
+            in_trade: 0.0,
+            type: "CRYPTO",
+          },
+          // { transaction: t }
+        );
       }
 
       // console.log(result.data.data);
@@ -669,6 +690,265 @@ exports.testing = async (req, res) => {
     successResponse(req, res, { owner });
   } catch (error) {
     errorResponse(req, res, error.response || error.message);
+  }
+};
+
+exports.get = async (req, res) => {
+  try {
+    const { symbol } = req.body;
+
+    if (symbol === "USDE") {
+      throw new Error("The EGO20 USDT deposit feature is currently undergoing maintainance, \n please check back later.");
+    }
+
+    let asset = await Asset.findOne({ where: { symbol } });
+
+    if (!asset) {
+      throw new Error("Account not listed");
+    }
+
+    let wallet;
+    let egoBlock = 0;
+
+    if (asset.blockchain === "EGOCHAIN") {
+      console.log("sss");
+      wallet = await Wallet.findOne({
+        where: { blockchain: "BINANCE", email: req.user.email },
+      });
+      let res = await instance2.get("api?module=block&action=eth_block_number");
+
+      console.log(res.data.result);
+
+      egoBlock = web3.utils.hexToNumber(res.data.result);
+
+      console.log(egoBlock);
+    } else {
+      console.log("kkk");
+      wallet = await Wallet.findOne({
+        where: { blockchain: "BINANCE", email: req.user.email },
+      });
+    }
+
+    console.log(asset.blockchain, "klk");
+
+    let address;
+    let result;
+    let block = 0;
+    if (!wallet) {
+      // generate wallet
+      switch (asset.blockchain) {
+        case "ETHEREUM":
+          result = await instance.get("ethereum/create/wallet");
+          block = result.data.data.block;
+          break;
+        case "BINANCE":
+        case "EGOCHAIN":
+          console.log("lklhh");
+          let dataw = {};
+          let lblock = await web3.eth.getBlockNumber();
+          const ethers = require("ethers");
+          // Wrap the createRandom() call in a Promise with a timeout
+          const createRandomPromise = new Promise((resolve, reject) => {
+            setTimeout(() => {
+              reject(new Error("createRandom() call timed out"));
+            }, 10000); // 15 seconds timeout
+
+            const wallet = ethers.Wallet.createRandom();
+            resolve(wallet);
+          });
+
+          try {
+            const wallet = await Promise.race([createRandomPromise]);
+            // console.log(wallet, "vjbj");
+
+            dataw = {
+              data: {
+                data: {
+                  key: wallet.privateKey,
+                  mnemonic: wallet.mnemonic.phrase,
+                  address: wallet.address,
+                },
+              },
+            };
+
+            // console.log(lblock, dataw);
+
+            result = dataw;
+            block = lblock;
+          } catch (error) {
+            console.error("Error creating random wallet:", error);
+            // Handle error accordingly
+            return errorResponse(req, res, error.message);
+          }
+          // console.log(dataw, jjijj);
+          break;
+
+        case "BITCOIN":
+          result = await instance.get("bitcoin/create/wallet");
+          break;
+
+        default:
+          throw new Error("Blockchain not found");
+      }
+      console.log(asset.blockchain);
+      if (asset.blockchain == "EGOCHAIN") {
+        console.log("ddd");
+        await Wallet.create({
+          blockchain: "BINANCE",
+          address: result.data.data.address,
+          meta: encryptData(JSON.stringify(result.data.data)),
+          email: req.user.email,
+        });
+      } else {
+        console.log("vvv");
+        await Wallet.create({
+          blockchain: asset.blockchain,
+          address: result.data.data.address,
+          meta: encryptData(JSON.stringify(result.data.data)),
+          email: req.user.email,
+        });
+      }
+
+      // console.log(result.data.data);
+      address = result.data.data.address;
+    } else {
+      let watch = await Watch.findOne({
+        where: { address: wallet.address, email: req.user.email },
+        order: [["createdAt", "DESC"]],
+      });
+
+      if (watch) {
+        block = watch.block;
+      } else {
+        let newBlock = await web3.eth.getBlockNumber();
+        if (JSON.parse(wallet.meta).block == null) {
+          block = newBlock;
+        } else {
+          block = JSON.parse(wallet.meta).block;
+        }
+      }
+
+      address = wallet.address;
+    }
+
+    if (address != "") {
+      if (asset.blockchain === "EGOCHAIN") {
+        if (symbol === "USDE") {
+          let watch = await Watch.findOne({
+            where: { symbol: "USD", email: req.user.email },
+          });
+          if (watch) {
+            await Watch.update(
+              { symbol, email: req.user.email },
+              { where: { symbol, email: req.user.email } }
+            );
+          } else {
+            await Watch.create({
+              symbol: "USD",
+              email: req.user.email,
+              block: egoBlock,
+              address,
+            });
+          }
+        } else if (symbol === "ESTAE") {
+          let watch = await Watch.findOne({
+            where: { symbol: "ESTA", email: req.user.email },
+          });
+          if (watch) {
+            await Watch.update(
+              { symbol, email: req.user.email },
+              { where: { symbol, email: req.user.email } }
+            );
+          } else {
+            await Watch.create({
+              symbol: "ESTA",
+              email: req.user.email,
+              block: egoBlock,
+              address,
+            });
+          }
+        } else {
+          let watch = await Watch.findOne({
+            where: { symbol, email: req.user.email },
+          });
+          if (watch) {
+            await Watch.update(
+              { symbol, email: req.user.email },
+              { where: { symbol, email: req.user.email } }
+            );
+          } else {
+            await Watch.create({
+              symbol,
+              email: req.user.email,
+              block: egoBlock,
+              address,
+            });
+          }
+        }
+      } else {
+        let watch = await Watch.findOne({
+          where: { symbol, email: req.user.email },
+        });
+        if (watch) {
+          await Watch.update(
+            { symbol, email: req.user.email },
+            { where: { symbol, email: req.user.email } }
+          );
+        } else {
+          await Watch.create({
+            symbol,
+            email: req.user.email,
+            block: block,
+            address,
+          });
+        }
+      }
+    }
+
+    let finalSymbol = "";
+
+    if (symbol === "USDE") {
+      finalSymbol = "USD";
+    } else if (symbol === "ESTAE") {
+      finalSymbol = "ESTA";
+    } else {
+      finalSymbol = symbol;
+    }
+
+    let message = "";
+    if (asset.blockchain == "ETHEREUM") {
+      message =
+        "Send only " +
+        symbol +
+        " to this deposit address. \nEnsure the network is Ethereum (ERC20). \nDo not send NFTs to this address.";
+    } else if (asset.blockchain == "BINANCE") {
+      message =
+        "Send only " +
+        symbol +
+        " to this deposit address. \nEnsure the network is BNB Smart Chain (BEP20). \nDo not send NFTs to this address";
+    } else if (asset.blockchain == "BITCOIN") {
+      message =
+        "Send only " +
+        symbol +
+        " to this deposit address. \nEnsure the network is Bitcoin. \nDo not send NFTs to this address";
+    } else if (asset.blockchain == "EGOCHAIN") {
+      if (finalSymbol === "ESTA") {
+        message =
+          "Send only " +
+          finalSymbol +
+          " to this deposit address. \nEnsure the network is Egochain.";
+      } else {
+        message =
+          "Send only " +
+          finalSymbol +
+          " to this deposit address. \nEnsure the network is Egochain. \nDo not send NFTs to this address";
+      }
+    }
+
+    return successResponse(req, res, { address, message });
+  } catch (error) {
+    console.log(error, "uuj");
+    return errorResponse(req, res, error.message);
   }
 };
 
