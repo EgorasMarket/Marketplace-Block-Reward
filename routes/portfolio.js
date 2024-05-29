@@ -13,6 +13,14 @@ router.get(
   // validate(userValidator.register),
   portfolioController.fetchTransactionHistory
 );
+
+
+router.get(
+  "/get/my/staking/earnings",
+  // validate(userValidator.login),
+  portfolioController.getUserStakeEarnings
+);
+
 router.get(
   "/get/my/balance",
   // validate(userValidator.login),

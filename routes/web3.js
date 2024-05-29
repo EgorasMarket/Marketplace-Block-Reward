@@ -11,4 +11,11 @@ router.get(
   web3Controller.watch
 );
 
+router.get(
+  "/egax/watch",
+  // loginLimiter,
+  // validate(userValidator.register),
+  web3Controller.watchEgax
+);
+
 module.exports = router;

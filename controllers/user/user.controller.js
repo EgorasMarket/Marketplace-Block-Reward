@@ -9,7 +9,9 @@ const {
   User,
   userActivity,
   ReferralCode,
+  // ReferralCode,
   ReferralList,
+  Referral
 } = require("../../models");
 
 const {
@@ -281,6 +283,164 @@ exports.register = async (req, res) => {
   }
 };
 
+exports.swapSignup = async (req, res) => {
+  let t;
+
+  const emailId = uuidv4();
+  // const emailId = uuidv4();
+
+  try {
+    t = await db.sequelize.transaction();
+    const { email, password, username, phone, countrycode, referral } = req.body;
+
+    const user = await User.scope("withSecretColumns").findOne({
+      where: { email },
+    });
+
+    const userUsername = await User.scope("withSecretColumns").findOne({
+      where: { username },
+    });
+
+    const userPhone = await User.scope("withSecretColumns").findOne({
+      where: { phone },
+    });
+
+    if (user) {
+      await this.newActivity({
+        user_email: email,
+        message: " Tried to Create another account with same email",
+        status: activity_status.failure,
+        tunnel: activity_tunnel.user,
+        type: "Authentication",
+      });
+      throw new Error("User already exists with same email");
+    }
+    if (userUsername) {
+      await this.newActivity({
+        user_email: email,
+        message: ` ${email} attempted signing up with username: ${username} that is already in use`,
+        status: activity_status.failure,
+        tunnel: activity_tunnel.user,
+        type: "Authentication",
+      });
+      throw new Error("User already exists with same username");
+    }
+    if (userPhone) {
+      await this.newActivity({
+        user_email: email,
+        message: ` ${email} attempted signing up with phone Number: ${phone} that is already in use`,
+        status: activity_status.failure,
+        tunnel: activity_tunnel.user,
+        type: "Authentication",
+      });
+      throw new Error("User already exists with same phone number");
+    }
+
+    const salt = await bcrypt.genSalt(parseInt(process.env.SALTROUNDS));
+    const reqPass = bcrypt.hashSync(password, parseInt(salt));
+    const rCode = Math.floor(1000 + Math.random() * 9000);
+
+    const wallet = await fetchOrGenerateNewWallet({ email, symbol: "EGAX" });
+    console.log(wallet);
+
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let code = "";
+
+    for (let i = 0; i < 10; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      code += characters.charAt(randomIndex);
+    }
+
+    const payload = {
+      email,
+      username,
+      phone,
+      countrycode,
+      emailId,
+      swapRef: code,
+      password: reqPass,
+      isVerified: countrycode == "+234" ? false : true,
+      isVerified: true,
+      wallet_address: wallet.address,
+      isNew: true,
+    };
+
+    const newUser = await User.create(payload, { transaction: t });
+
+    if (referral !== "") {
+      const findRef = await User.scope("withSecretColumns").findOne({
+        where: { swapRef: referral },
+      });
+
+      if (findRef) {
+        const payload2 = {
+          // id: refId,
+          userId: code,
+          username: username,
+          refererId: referral,
+        };
+
+        console.log(payload2);
+
+        const addReferal = await Referral.create(payload2, {
+          transaction: t,
+        });
+      }
+    }
+    // // add Referral
+    // if (req.body.referral != undefined && req.body.referral != "") {
+    //   const checkReferralCode = await ReferralCode.findOne({
+    //     where: { referral },
+    //   });
+    //   if (checkReferralCode) {
+    //     await ReferralList.create(
+    //       { referred: checkReferralCode.user, email: email },
+    //       { transaction: t }
+    //     );
+    //   }
+    // }
+
+    // end of add referral
+    if (newUser) {
+      // let origin = req.headers.origin;
+      // console.log(origin, "mgbaa");
+
+      // console.log(origin);
+      // const parts = payload.email.split("@");
+      // let dynamic_template_data = {};
+
+      // dynamic_template_data = {
+      //   code: rCode,
+      //   vId: emailId,
+      //   subject: "Egoras Email Verification",
+      //   name: `${parts[0]}`,
+      // };
+
+      // sendTemplate(
+      //   payload.email,
+      //   process.env.FROM,
+      //   process.env.EMAILVERIFICATION_TEMPLATE_ID,
+      //   dynamic_template_data
+      // );
+
+      await this.newActivity({
+        user_email: email,
+        message: ` ${email} have successfully Signed Up`,
+        status: activity_status.success,
+        tunnel: activity_tunnel.user,
+        type: "Registration",
+      });
+
+      await t.commit();
+      return successResponse(req, res, {});
+    }
+  } catch (error) {
+    console.log(error);
+    await t.rollback();
+    return errorResponse(req, res, error.message);
+  }
+};
+
 exports.login = async (req, res) => {
   try {
     const host = req.get("host");
@@ -374,6 +534,72 @@ exports.login = async (req, res) => {
       type: "Authentication",
     });
     return errorResponse(req, res, error.message);
+  }
+};
+
+exports.refererCount = async (req, res) => {
+  // const error = validationResult(req);
+  // if (!error.isEmpty()) {
+  //   return res.send({
+  //     error: error.array(),
+  //   });
+  // }
+  try {
+    // const { userAddress } = req.params;
+
+    const { userId } = req.user;
+
+    //check validity of user address
+    const isUser = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    if (!isUser) throw new Error("Invalid user credentials");
+
+    let referCount = await Referral.findAndCountAll({
+      where: { refererId: isUser.swapRef },
+    });
+
+    const getReferrers = await Referral.findAll({
+      attributes: ["userId", "username", "amount", "status"],
+      where: {
+        refererId: isUser.swapRef,
+      },
+    });
+
+    res.status(200).send({
+      statusCode: 200,
+      success: true,
+      message: "Referal count retrieved",
+      count: referCount.count,
+      data: getReferrers,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      errors: [{ msg: error.message }],
+    });
+  }
+};
+
+exports.getLeaderBoard = async (req, res) => {
+  try {
+    const [leaderboard, metadata] = await db.sequelize.query(
+      "SELECT COUNT(r.refererId) AS refCount, u.username FROM Referrals r JOIN Users u ON r.refererId = u.swapRef WHERE r.refererId != '' GROUP BY r.refererId, u.username"
+    );
+
+    res.status(200).send({
+      statusCode: 200,
+      success: true,
+      message: "Leaderboard retrieved",
+      data: leaderboard,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      errors: [{ msg: error.message }],
+    });
   }
 };
 

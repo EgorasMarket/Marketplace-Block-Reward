@@ -31,10 +31,11 @@ const {
 const { symbol } = require("joi");
 
 // //send the user the relevant 404 token to managed wallet
+// //send the user the relevant 404 token to managed wallet
 
 exports.PurchaseProduct = async (req, res) => {
   try {
-    const { product_id, quantity } = req.body;
+    const { product_id, quantity, deliveryMethod } = req.body;
 
     const { userId, email } = req.user;
     console.log(req.user);
@@ -95,6 +96,7 @@ exports.PurchaseProduct = async (req, res) => {
         product_id,
         quantity,
         amount: finalAmount,
+        deliveryType: deliveryMethod
       };
 
       let placeOrder = await addOrder(puPayload, processPurchase);
@@ -141,6 +143,8 @@ exports.PurchaseProduct = async (req, res) => {
           transaction: processPurchase,
         }
       );
+
+      console.log(prod_stake, 'jjjji');
       const settlement = await this.settle({
         wallet_address: req.user.wallet_address,
         amount: quantity,
@@ -158,12 +162,66 @@ exports.PurchaseProduct = async (req, res) => {
       ) {
         console.log("kjoijoijoi");
         processPurchase.rollback();
+        return errorResponse(req, res, {message: "An error eccurred, try again"});
+      } else {
+        return successResponse(req, res, {});
       }
       // await fundUserWalletOnSuccessfulPurchase();
       //run the stake algorithm to ensure workability
     });
 
-    return successResponse(req, res, {});
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
+
+exports.SubmitDelivery = async (req, res) => {
+    try {
+        const {
+            fullname,
+            phoneNumber,
+            country,
+            telegramId
+        } = req.body;
+
+        const { userId, email } = req.user;
+
+        console.log(
+            fullname,
+            phoneNumber,
+            country,
+            telegramId
+        );
+
+        await DeliveryDetails.create(
+            { 
+                email,
+                fullname,
+                phoneNumber,
+                country,
+                telegramId,
+            },
+            
+          );
+
+       
+    
+      return successResponse(req, res, {  });
+    } catch (error) {
+      return errorResponse(req, res, error.message);
+    }
+};
+
+exports.getBoughtProducts = async (req, res) => {
+  try {
+    let user = req.user.email;
+
+    let query = `SELECT PurchaseOrders.*, Products.product_name, Products.product_images, Products.product_brand FROM PurchaseOrders JOIN Products ON PurchaseOrders.product_id = Products.id JOIN Users ON Users.email = PurchaseOrders.email WHERE Users.email = '${user}'`;
+      const result = await db.sequelize.query(query);
+      console.log(result, "llll");
+    
+    // console.log(result);
+    return successResponse(req, res, result[0]);
   } catch (error) {
     return errorResponse(req, res, error.message);
   }

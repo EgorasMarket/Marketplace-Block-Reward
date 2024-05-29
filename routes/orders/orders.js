@@ -6,4 +6,6 @@ const orderController = require("../../controllers/orders/orders.controller");
 
 router.post("/purchase/product", orderController.PurchaseProduct);
 router.post("/submit/delivery-info", orderController.SubmitDelivery);
+router.get("/my/bought/product", orderController.getBoughtProducts);
+
 module.exports = router;

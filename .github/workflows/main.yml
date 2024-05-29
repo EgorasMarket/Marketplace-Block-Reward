@@ -19,7 +19,6 @@ jobs:
   
     # - run: npm install 
     # - run: npm install express-rate-limit
-    # - run: npm install express-rate-limit
   # comment
     
 
@@ -64,7 +63,7 @@ jobs:
           
     - name: 'Restart server'
       run: |
-          pm2 restart 9
+          pm2 restart 11
          
          
 
