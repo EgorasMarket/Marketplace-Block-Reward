@@ -306,7 +306,7 @@ exports.swapSignup = async (req, res) => {
     });
 
     if (user) {
-      await newActivity({
+      await this.newActivity({
         user_email: email,
         message: " Tried to Create another account with same email",
         status: activity_status.failure,
@@ -340,6 +340,9 @@ exports.swapSignup = async (req, res) => {
     const reqPass = bcrypt.hashSync(password, parseInt(salt));
     const rCode = Math.floor(1000 + Math.random() * 9000);
 
+    const wallet = await fetchOrGenerateNewWallet({ email, symbol: "EGAX" });
+    console.log(wallet);
+
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let code = "";
 
@@ -358,6 +361,7 @@ exports.swapSignup = async (req, res) => {
       password: reqPass,
       isVerified: countrycode == "+234" ? false : true,
       isVerified: true,
+      wallet_address: wallet.address,
       isNew: true,
     };
 

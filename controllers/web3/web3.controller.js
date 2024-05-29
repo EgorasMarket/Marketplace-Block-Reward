@@ -11,6 +11,8 @@ const {
   uniqueId,
 } = require("../../helpers");
 const db = require("../../config/sequelize");
+const { Op } = require("sequelize");
+
 
 const cron = require("node-cron");
 
@@ -31,6 +33,7 @@ const {
   Watch,
   Deposit,
   Asset,
+  User,
   // Coingecko,
   PriceOracle,
   LiquidityPoolBalance,
@@ -298,6 +301,188 @@ exports.watch = async (req, res) => {
 
     return successResponse(req, res, {});
   } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
+
+exports.watchEgax = async (req, res) => {
+  try {
+    // Calculate the timestamp 15 minutes ago
+    const fifteenMinutesAgo = new Date(new Date() - 15 * 60 * 1000);
+    let watches = await Watch.findAll({
+      where: {
+        symbol: {
+          [Op.eq]: "EGAX",
+        },
+        // updatedAt: {
+        //   [Op.lte]: fifteenMinutesAgo,
+        // },
+      },
+      order: [
+        ["id", "DESC"],
+        ["updatedAt", "DESC"],
+      ],
+    });
+    // console.log(watches);
+
+    if (watches) {
+      let mainWatches = [];
+      // console.log("BBBB");
+      if (watches) {
+        // Map watches to an array of promises
+        const promises = watches.map(async (watch) => {
+          let asset = await Asset.findOne({ where: { symbol: watch.symbol } });
+          if (asset) {
+            mainWatches.push({
+              address: watch.address,
+              email: watch.email,
+              symbol: watch.symbol,
+              block: watch.block,
+            });
+          }
+        });
+
+        // Wait for all promises to resolve
+        await Promise.all(promises);
+      }
+      // console.log(mainWatches);
+
+      let chunkSize = 20;
+      let groupedArrays = [];
+
+      for (let i = 0; i < mainWatches.length; i += chunkSize) {
+        let chunk = mainWatches.slice(i, i + chunkSize);
+        groupedArrays.push(chunk);
+      }
+
+      // console.log(groupedArrays, "final");
+
+      groupedArrays.map((firstLoop, index) => {
+        console.log("kklll");
+        setTimeout(() => {
+          console.log("Iteration", index + 1);
+          firstLoop.forEach(async (watch) => {
+            console.log(watch, "ijiji");
+
+            let startBlock = watch.block;
+            let endBlock = watch.block + 10;
+
+            let result = await instance2.get(
+              "api?module=account&action=txlist&startblock=" +
+                startBlock +
+                "&" +
+                endBlock +
+                "=latest&page=1&offset=5&sort=asc&address=" +
+                watch.address
+            );
+
+            console.log(result.data.result);
+            result.data.result.forEach(async (deposit) => {
+              console.log(deposit.confirmations);
+              console.log(deposit.to);
+
+              await db.sequelize.transaction(async (addDeposit) => {
+                console.log(deposit.to.toLowerCase());
+                console.log(deposit.to.toLowerCase());
+                if (watch.address.toLowerCase() == watch.address.toLowerCase()) {
+                  let findDepositHash = await Deposit.findOne({
+                    where: { hash: deposit.hash },
+                  });
+                  if (!findDepositHash) {
+                    let amount = parseInt(deposit.value) / 1000000000000000000;
+                    let addFund = await add(
+                      watch.email,
+                      watch.symbol,
+                      "portfolio",
+                      "value",
+                      amount,
+                      addDeposit
+                    );
+                    const enterHash = await Deposit.create(
+                      {
+                        hash: deposit.hash,
+                        blockchain: "EGOCHAIN",
+                      },
+                      { transaction: addDeposit }
+                    );
+
+                    let ntPayload = {
+                      email: watch.email,
+                      meta: {
+                        symbol: watch.symbol,
+                        amount: amount.toString(),
+                        type: "deposit",
+                      },
+                    };
+                    let createNt = await nt(ntPayload, addDeposit);
+
+                    let txPayload = {
+                      email: watch.email,
+                      to_email: watch.email,
+                      meta: {
+                        symbol: watch.symbol,
+                        txh: deposit.hash,
+                        confirmation: "3/3",
+                        network: "EGOCHAIN",
+                        wallet_address: deposit.to,
+                      },
+
+                      amount: amount,
+                      type: "DEPOSIT",
+                      status: "SUCCESS",
+                    };
+                    let createTx = await tx(txPayload, addDeposit);
+                    let updateWatch = await Watch.update(
+                      { block: deposit.blockNumber },
+                      { where: { symbol: watch.symbol, email: watch.email } }
+                    );
+                    if (
+                      !addFund[0][1] &&
+                      !enterHash &&
+                      !createNt[0][1] &&
+                      !createTx[0][1] &&
+                      !updateWatch[0][1]
+                    ) {
+                      addDeposit.rollback();
+                    } else {
+                      let userPayload = await User.findOne({
+                        where: { email: watch.email },
+                      });
+                      // if (userPayload) {
+                      //   var dynamic_template_data = {
+                      //     amount: amount,
+                      //     symbol: watch.symbol,
+                      //     subject: "Egax Deposit Confirmation",
+                      //     name:
+                      //       userPayload.firstName + ", " + userPayload.lastName,
+                      //   };
+                      //   sendTemplate(
+                      //     watch.email,
+                      //     process.env.FROM,
+                      //     process.env.DEPOSIT_TEMPLATE_ID,
+                      //     dynamic_template_data
+                      //   );
+
+                      //   //  throw new Error('');
+                      // } else {
+                      //   throw new Error("");
+                      // }
+                    }
+                  }
+                } else {
+                  console.log("Wallet does not match or exist");
+                  // throw new Error("");
+                }
+              });
+            });
+          });
+        }, index * 5000);
+      });
+    }
+
+    return successResponse(req, res, {});
+  } catch (error) {
+    console.log(error);
     return errorResponse(req, res, error.message);
   }
 };

@@ -1,3 +1,5 @@
+const axios = require("axios").default;
+
 const db = require("../../config/sequelize");
 const { Op } = require("sequelize");
 const imgur = require("imgur");
@@ -7,14 +9,16 @@ const uuid = require("uuid").v4;
 
 var fs = require("fs");
 
-const { 
-    Product,
-    User,
-    Portfolio,
-    PurchaseOrder,
-    DeliveryDetails,
-    Stake
- } = require("../../models");
+const {
+  Product,
+  Transactions,
+  User,
+  Portfolio,
+  PurchaseOrder,
+  DeliveryDetails,
+  Asset,
+  Stake,
+} = require("../../models");
 const {
   successResponse,
   errorResponse,
@@ -97,6 +101,7 @@ exports.PurchaseProduct = async (req, res) => {
 
       let placeOrder = await addOrder(puPayload, processPurchase);
 
+      console.log(placeOrder[0][2].id, "makachi");
       // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
       // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
 
@@ -132,6 +137,7 @@ exports.PurchaseProduct = async (req, res) => {
           // user_id: isUser.id,
           purchase_val: finalAmount,
           transaction: processPurchase,
+          purchase_id: placeOrder[0][2].id,
         },
         {
           transaction: processPurchase,
@@ -139,6 +145,14 @@ exports.PurchaseProduct = async (req, res) => {
       );
 
       console.log(prod_stake, 'jjjji');
+      const settlement = await this.settle({
+        wallet_address: req.user.wallet_address,
+        amount: quantity,
+        symbol: checkProduct.token_type,
+        user_id: req.user.userId,
+        email: req.user.email,
+      });
+      console.log(settlement, "ass");
       if (
         !deductQuantity[0][1] &&
         !placeOrder[0][1] &&
@@ -221,6 +235,7 @@ const ProductStake = async ({
   quantity,
   purchase_val,
   transaction,
+  purchase_id,
 }) => {
   //fetch token_id =
   const { userId, email } = user;
@@ -237,6 +252,7 @@ const ProductStake = async ({
         start_date: new Date(),
         rewards_earned: 0.0,
         purchase_val,
+        purchase_id,
       },
       {
         transaction,
@@ -260,6 +276,7 @@ const ProductStake = async ({
         success: true,
       };
     }
+
     return {
       success: false,
       error: "cannot complete",
@@ -273,6 +290,125 @@ const ProductStake = async ({
       error: err.message,
     };
   }
-
   //collect user information and token info then add to stake table
 };
+
+exports.SubmitDelivery = async (req, res) => {
+  try {
+    const { fullname, phoneNumber, country, telegramId } = req.body;
+
+    const { userId, email } = req.user;
+
+    console.log(fullname, phoneNumber, country, telegramId);
+
+    await DeliveryDetails.create({
+      email,
+      fullname,
+      phoneNumber,
+      country,
+      telegramId,
+    });
+
+    return successResponse(req, res, {});
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
+
+exports.settle = async ({
+  wallet_address,
+  symbol,
+  network,
+  amount,
+  user_id,
+  stake_id,
+  email,
+}) => {
+  //OBTAIN CONTRACT ADDRESS USING SYMBOL
+
+  const newAsset = await Asset.findOne({
+    where: { symbol },
+  });
+  let mainValue = parseFloat(amount) * 1000000000000000000;
+
+  console.log(newAsset, "asss");
+  let blockChainPayload = {
+    privateKey: process.env.PVCT,
+    contractAddress: newAsset.contract,
+    method: "transfer",
+    rpcURL: "https://mainnet.egochain.org",
+    params: [`${wallet_address}`, `${mainValue}`],
+    type: "write",
+    abi: [
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "to_",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "value_",
+            type: "uint256",
+          },
+        ],
+        name: "transfer",
+        outputs: [
+          {
+            internalType: "bool",
+            name: "",
+            type: "bool",
+          },
+        ],
+        stateMutability: "nonpayable",
+        type: "function",
+      },
+    ],
+  };
+
+  // console.log(blockChainPayload);
+
+  // Make a POST request using Axios
+  axios
+    .post(
+      "https://bx.hollox.finance/mcw/send/to/erc20/chains",
+      blockChainPayload
+      // config
+    )
+    .then((response) => {
+      // Handle successful response here
+      console.log("Goodluck:", response.data.data.data);
+
+      // let ffff = {
+      //   ...response.data.data.data.data,
+      //   ...JSON.parse(cashout.meta),
+      // };
+
+      if (response.data.success == true) {
+        const meta = {
+          ...response.data.data.data.data,
+          stake_id,
+        };
+        Transactions.create({
+          status: "SUCCESS",
+          meta,
+          type: "NFT-CREDIT",
+          amount,
+          email,
+          to_email: email,
+        });
+      }
+    })
+    .catch((error) => {
+      // Handle error here
+      console.error("Error: Withdrawal failed", error.response);
+    })
+    .finally(() => {
+      // This block is executed regardless of success or failure
+      console.log("Request completed");
+    });
+};
+function removeWhitespace(str) {
+  return str.replace(/\s/g, "");
+}

@@ -35,6 +35,9 @@ module.exports = {
         type: Sequelize.DECIMAL(10),
         allowNull: false,
       },
+      purchase_id: {
+        type: Sequelize.STRING(),
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

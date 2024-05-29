@@ -19,7 +19,9 @@ module.exports = (sequelize, DataTypes) => {
           "ADDLIQUIDITY",
           "REMOVELIQUIDITY",
           "SUBSCRIPTION",
-          "SUBSCRIPTION_REWARD"
+          "SUBSCRIPTION_REWARD",
+          "NFT-CREDIT",
+          "NFT-DEBIT"
         ),
         allowNull: false,
       },

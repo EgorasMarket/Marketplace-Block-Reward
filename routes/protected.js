@@ -13,6 +13,17 @@ const {
 // const validateRequest = require("../helpers/joi_validationRequest");
 
 router.get("/me", userController.profile);
+router.get(
+  "/referral/count",
+  // check("userAddress").notEmpty().withMessage("Please provide wallet address"),
+  userController.refererCount
+);
+
+router.get(
+  "/referral/leaderboard",
+  // check("userAddress").notEmpty().withMessage("Please provide wallet address"),
+  userController.getLeaderBoard
+);
 router.post("/change/password", validate(userValidator.changePassword), userController.changePassword);
 
 

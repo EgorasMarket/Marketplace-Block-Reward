@@ -21,6 +21,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(10),
       allowNull: false,
     },
+    purchase_id: {
+      type: DataTypes.STRING(),
+    },
   });
   Stake.associate = function (models) {
     // associations can be defined here
