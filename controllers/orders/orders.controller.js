@@ -96,7 +96,7 @@ exports.PurchaseProduct = async (req, res) => {
         product_id,
         quantity,
         amount: finalAmount,
-        deliveryType: deliveryMethod
+        deliveryType: deliveryMethod,
       };
 
       let placeOrder = await addOrder(puPayload, processPurchase);
@@ -144,72 +144,57 @@ exports.PurchaseProduct = async (req, res) => {
         }
       );
 
-      console.log(prod_stake, 'jjjji');
       const settlement = await this.settle({
         wallet_address: req.user.wallet_address,
         amount: quantity,
         symbol: checkProduct.token_type,
         user_id: req.user.userId,
         email: req.user.email,
+        transaction: processPurchase,
       });
       console.log(settlement, "ass");
       if (
         !deductQuantity[0][1] &&
         !placeOrder[0][1] &&
         !createTx[0][1] &&
-        !deductPortfolio[0][1] &&
-        !prod_stake
+        !deductPortfolio[0][1]
       ) {
         console.log("kjoijoijoi");
-        processPurchase.rollback();
-        return errorResponse(req, res, {message: "An error eccurred, try again"});
+        // processPurchase.rollback();
+        return errorResponse(req, res, {
+          message: "An error eccurred, try again",
+        });
       } else {
         return successResponse(req, res, {});
       }
       // await fundUserWalletOnSuccessfulPurchase();
       //run the stake algorithm to ensure workability
     });
-
   } catch (error) {
     return errorResponse(req, res, error.message);
   }
 };
 
 exports.SubmitDelivery = async (req, res) => {
-    try {
-        const {
-            fullname,
-            phoneNumber,
-            country,
-            telegramId
-        } = req.body;
+  try {
+    const { fullname, phoneNumber, country, telegramId } = req.body;
 
-        const { userId, email } = req.user;
+    const { userId, email } = req.user;
 
-        console.log(
-            fullname,
-            phoneNumber,
-            country,
-            telegramId
-        );
+    console.log(fullname, phoneNumber, country, telegramId);
 
-        await DeliveryDetails.create(
-            { 
-                email,
-                fullname,
-                phoneNumber,
-                country,
-                telegramId,
-            },
-            
-          );
+    await DeliveryDetails.create({
+      email,
+      fullname,
+      phoneNumber,
+      country,
+      telegramId,
+    });
 
-       
-    
-      return successResponse(req, res, {  });
-    } catch (error) {
-      return errorResponse(req, res, error.message);
-    }
+    return successResponse(req, res, {});
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
 };
 
 exports.getBoughtProducts = async (req, res) => {
@@ -217,9 +202,9 @@ exports.getBoughtProducts = async (req, res) => {
     let user = req.user.email;
 
     let query = `SELECT PurchaseOrders.*, Products.product_name, Products.product_images, Products.product_brand FROM PurchaseOrders JOIN Products ON PurchaseOrders.product_id = Products.id JOIN Users ON Users.email = PurchaseOrders.email WHERE Users.email = '${user}'`;
-      const result = await db.sequelize.query(query);
-      console.log(result, "llll");
-    
+    const result = await db.sequelize.query(query);
+    console.log(result, "llll");
+
     // console.log(result);
     return successResponse(req, res, result[0]);
   } catch (error) {
@@ -321,6 +306,7 @@ exports.settle = async ({
   user_id,
   stake_id,
   email,
+  transaction,
 }) => {
   //OBTAIN CONTRACT ADDRESS USING SYMBOL
 
@@ -388,18 +374,24 @@ exports.settle = async ({
           ...response.data.data.data.data,
           stake_id,
         };
-        Transactions.create({
-          status: "SUCCESS",
-          meta,
-          type: "NFT-CREDIT",
-          amount,
-          email,
-          to_email: email,
-        });
+        Transactions.create(
+          {
+            status: "SUCCESS",
+            meta,
+            type: "NFT-CREDIT",
+            amount,
+            email,
+            to_email: email,
+          },
+          {
+            // transaction,
+          }
+        );
       }
     })
     .catch((error) => {
       // Handle error here
+      // transaction.rollback();
       console.error("Error: Withdrawal failed", error.response);
     })
     .finally(() => {
