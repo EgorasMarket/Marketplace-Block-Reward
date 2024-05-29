@@ -14,7 +14,6 @@ router.get(
   portfolioController.fetchTransactionHistory
 );
 
-
 router.get(
   "/get/my/staking/earnings",
   // validate(userValidator.login),
@@ -25,6 +24,12 @@ router.get(
   "/get/my/balance",
   // validate(userValidator.login),
   portfolioController.getPortfolios
+);
+
+router.get(
+  "/get/liquity-pool-balance",
+  // validate(userValidator.login),
+  portfolioController.liquidityPoolBalance
 );
 
 module.exports = router;

@@ -63,7 +63,6 @@ app.use("/product", products);
 app.use("/order", apiMiddleware.apiAuth, order);
 app.use("/api/withdrawal", apiMiddleware.apiAuth, withdrawalProtected);
 app.use("/api/deposit", apiMiddleware.apiAuth, depositProtected);
-
 app.use("/portfolio", apiMiddleware.apiAuth, portfolio);
 app.use("/kyc", apiMiddleware.apiAuth, kyc);
 app.use("/pub", require("./routes/pub"));

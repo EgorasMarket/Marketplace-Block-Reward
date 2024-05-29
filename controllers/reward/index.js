@@ -19,7 +19,7 @@ const {
   DeliveryDetails,
   Asset,
   Stake,
-
+  RewardPool,
   Sequelize,
 } = require("../../models");
 const {
@@ -77,7 +77,14 @@ exports.distribute_reward = async (req, res) => {
       ).then((res) => {
         console.log(res);
       });
+
+      const promise2 = await RewardPool.create({
+        user_id: stakes.user_id,
+        reward: userReward,
+        allocated_pool_value: amount_in_pool,
+      });
       promises.push(promise);
+      promises.push(promise2);
     }
 
     Promise.all(promises).then((result) => {
