@@ -4,13 +4,18 @@ const validate = require("express-validation");
 
 // const userValidator = require("../controllers/user/user.validator");
 const portfolioController = require("../controllers/portfolio/portfolio.controller");
+const walletController = require("../controllers/web3/web3.controller");
 // const portfolioValidate = require("../controllers/portfolio/")
 const { loginLimiter } = require("../middleware/rateLimitMiddleware");
 
+router.post(
+  "/trigger/egax/deposit",
+  // validate(protectedWalletValidator.get),
+  walletController.get
+);
+
 router.get(
   "/get/transaction/history",
-  //   loginLimiter,
-  // validate(userValidator.register),
   portfolioController.fetchTransactionHistory
 );
 
