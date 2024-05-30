@@ -23,6 +23,11 @@ router.get(
   // check("userAddress").notEmpty().withMessage("Please provide wallet address"),
   userController.fetchDashboardData
 );
+router.get(
+  "/dashboard/stake/data",
+  // check("userAddress").notEmpty().withMessage("Please provide wallet address"),
+  userController.fetchStakeData
+);
 
 router.get("/referral/leaderboard", userController.getLeaderBoard);
 router.post(

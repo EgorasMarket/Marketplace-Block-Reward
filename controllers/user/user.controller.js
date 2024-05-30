@@ -15,6 +15,7 @@ const {
   Referral,
   Stake,
   Product,
+  RewardPool,
 } = require("../../models");
 
 const {
@@ -564,6 +565,23 @@ exports.fetchDashboardData = async (req, res) => {
     return successResponse(req, res, {
       products_bought: products_bought.length,
       amount_earned: total_amount,
+    });
+  } catch (err) {
+    return errorResponse(req, res, err.message, 500, err);
+  }
+};
+exports.fetchStakeData = async (req, res) => {
+  try {
+    const stakeData = await RewardPool.findAll({
+      where: {
+        user_id: req.user.userId,
+      },
+    });
+
+    //loop through and find the total amount
+
+    return successResponse(req, res, {
+      stakeData,
     });
   } catch (err) {
     return errorResponse(req, res, err.message, 500, err);
