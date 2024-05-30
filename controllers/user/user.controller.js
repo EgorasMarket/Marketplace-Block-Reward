@@ -10,6 +10,7 @@ const {
   userActivity,
   ReferralCode,
   // ReferralCode,
+  PurchaseOrder,
   ReferralList,
   Referral,
   Stake,
@@ -542,7 +543,7 @@ exports.login = async (req, res) => {
 exports.fetchDashboardData = async (req, res) => {
   try {
     let total_amount = 0.0;
-    const products_bought = await Product.findAll({
+    const products_bought = await PurchaseOrder.findAll({
       where: {
         email: req.user.email,
       },
@@ -557,7 +558,7 @@ exports.fetchDashboardData = async (req, res) => {
     //loop through and find the total amount
 
     for (const stake of amount_earned) {
-      total_amount += stake.rewards_earned;
+      total_amount += parseFloat(stake.rewards_earned);
     }
 
     return successResponse(req, res, {
