@@ -18,13 +18,22 @@ router.get(
   // check("userAddress").notEmpty().withMessage("Please provide wallet address"),
   userController.refererCount
 );
-
 router.get(
-  "/referral/leaderboard",
+  "/dashboard/data",
   // check("userAddress").notEmpty().withMessage("Please provide wallet address"),
-  userController.getLeaderBoard
+  userController.fetchDashboardData
 );
-router.post("/change/password", validate(userValidator.changePassword), userController.changePassword);
+router.get(
+  "/dashboard/stake/data",
+  // check("userAddress").notEmpty().withMessage("Please provide wallet address"),
+  userController.fetchStakeData
+);
 
+router.get("/referral/leaderboard", userController.getLeaderBoard);
+router.post(
+  "/change/password",
+  validate(userValidator.changePassword),
+  userController.changePassword
+);
 
 module.exports = router;

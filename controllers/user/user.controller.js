@@ -10,8 +10,12 @@ const {
   userActivity,
   ReferralCode,
   // ReferralCode,
+  PurchaseOrder,
   ReferralList,
-  Referral
+  Referral,
+  Stake,
+  Product,
+  RewardPool,
 } = require("../../models");
 
 const {
@@ -291,7 +295,8 @@ exports.swapSignup = async (req, res) => {
 
   try {
     t = await db.sequelize.transaction();
-    const { email, password, username, phone, countrycode, referral } = req.body;
+    const { email, password, username, phone, countrycode, referral } =
+      req.body;
 
     const user = await User.scope("withSecretColumns").findOne({
       where: { email },
@@ -536,7 +541,52 @@ exports.login = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
+exports.fetchDashboardData = async (req, res) => {
+  try {
+    let total_amount = 0.0;
+    const products_bought = await PurchaseOrder.findAll({
+      where: {
+        email: req.user.email,
+      },
+    });
 
+    const amount_earned = await Stake.findAll({
+      where: {
+        user_id: req.user.userId,
+      },
+    });
+
+    //loop through and find the total amount
+
+    for (const stake of amount_earned) {
+      total_amount += parseFloat(stake.rewards_earned);
+    }
+
+    return successResponse(req, res, {
+      products_bought: products_bought.length,
+      amount_earned: total_amount,
+    });
+  } catch (err) {
+    return errorResponse(req, res, err.message, 500, err);
+  }
+};
+exports.fetchStakeData = async (req, res) => {
+  try {
+    const stakeData = await RewardPool.findAll({
+      where: {
+        user_id: req.user.userId,
+      },
+    });
+
+    //loop through and find the total amount
+
+    return successResponse(req, res, {
+      stakeData,
+    });
+  } catch (err) {
+    return errorResponse(req, res, err.message, 500, err);
+  }
+};
 exports.refererCount = async (req, res) => {
   // const error = validationResult(req);
   // if (!error.isEmpty()) {
@@ -617,10 +667,9 @@ exports.changePassword = async (req, res) => {
       parseInt(process.env.SALTROUNDS)
     );
     await User.update({ password: newPass }, { where: { id: user.id } });
-  
+
     return successResponse(req, res, {});
   } catch (error) {
-
     return errorResponse(req, res, error.message);
   }
 };

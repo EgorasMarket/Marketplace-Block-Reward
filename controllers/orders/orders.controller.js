@@ -396,7 +396,7 @@ exports.settle = async ({
     })
     .finally(() => {
       // This block is executed regardless of success or failure
-      console.log("Request completed");
+      console.log("Request complyhoeted");
     });
 };
 function removeWhitespace(str) {

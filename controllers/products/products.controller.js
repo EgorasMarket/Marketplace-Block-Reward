@@ -3,19 +3,19 @@ const { Op } = require("sequelize");
 const imgur = require("imgur");
 const path = require("path");
 
-
 const uuid = require("uuid").v4;
 
 var fs = require("fs");
 
-const { 
-    Product,
-    User,
+const {
+  Product,
+  User,
   Bidding,
   Membership,
   MintNFT,
   ProductCategories,
- } = require("../../models");
+  Stake,
+} = require("../../models");
 const {
   successResponse,
   errorResponse,
@@ -378,7 +378,7 @@ exports.initialAddDirect = async (req, res) => {
       user_wallet: userAddress,
       quantity: productQuantity,
       product_specifications: prod_spec,
-    //   user_amount: parseFloat(product_amount),
+      //   user_amount: parseFloat(product_amount),
       amount: parseFloat(product_amount),
     };
 
@@ -572,7 +572,6 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-
 exports.AllProducts = async (req, res) => {
   try {
     const getProduct = await Product.findAll({
@@ -728,8 +727,6 @@ exports.ApprovedProduct = async (req, res) => {
   }
 };
 
-
-
 exports.UpdateAsSold = async (req, res) => {
   // const error = validationResult(req);
   // if (!error.isEmpty()) {
@@ -783,6 +780,28 @@ exports.FetchProductByCategory = async (req, res) => {
     return errorResponse(req, res, err.message, 500, err);
   }
 };
+exports.fetchDashboardData = async (req, res) => {
+  const { category } = req.params;
+  try {
+    const products_bought = await Product.findAll({
+      where: {
+        email: req.user.email,
+      },
+    });
 
+    const amount_earned = await Stake.findAll({
+      where: {
+        user_id: req.user.userId,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: fetchProduct,
+    });
+  } catch (err) {
+    return errorResponse(req, res, err.message, 500, err);
+  }
+};
 
 //add comment
