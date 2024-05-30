@@ -5,6 +5,7 @@ const { Op } = require("sequelize");
 const { v4 } = require("uuid");
 const uuidv4 = v4;
 
+const { getMonth, parse, parseISO, format } = require("date-fns");
 const {
   User,
   userActivity,
@@ -578,10 +579,31 @@ exports.fetchStakeData = async (req, res) => {
       },
     });
 
+    const arr = [];
+    for (let pool of stakeData) {
+      const formattedDate = format(
+        parseISO("2019-02-11T14:00:00"),
+        "MMM dd, yyyy"
+      );
+      // const parsedDate = parse(parseISO(pool.createdAt), "yyyy-MM-dd");
+      console.log(formattedDate.split(" ")[0].trim(), "month");
+
+      const payload = {
+        value: pool.reward,
+        timestamp: formattedDate,
+        month: formattedDate.split(" ")[0].trim(),
+      };
+
+      arr.push(payload);
+    }
+
+    // value: 3729.2599999999998,
+    // timestamp: "Jan 01, 2024",
+    // month: "Jan",
     //loop through and find the total amount
 
     return successResponse(req, res, {
-      stakeData,
+      stakeData: arr,
     });
   } catch (err) {
     return errorResponse(req, res, err.message, 500, err);
