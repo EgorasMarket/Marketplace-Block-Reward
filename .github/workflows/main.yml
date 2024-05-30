@@ -59,6 +59,7 @@ jobs:
           echo YOU_VERIFY_MAINNET_ENDPOINT=${{secrets.YOU_VERIFY_MAINNET_ENDPOINT}} >> .env
           echo YOU_VERIFY_TESTNET_ENDPOINT=${{secrets.YOU_VERIFY_TESTNET_ENDPOINT}} >> .env
           echo KORA_PBK_LIVE_KEY=${{secrets.KORA_PBK_LIVE_KEY}} >> .env
+          echo PVCT=${{secrets.PVCT}} >> .env
 
           
     - name: 'Restart server'
