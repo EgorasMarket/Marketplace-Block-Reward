@@ -1252,6 +1252,7 @@ exports.external = async (req, res) => {
       }
 
       // console.log(getAsset);
+      // console.log(getAsset);
 
       let assetNetworks = JSON.parse(getAsset.networks);
       for (let index = 0; index < assetNetworks.length; index++) {
