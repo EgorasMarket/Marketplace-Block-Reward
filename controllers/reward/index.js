@@ -52,6 +52,8 @@ exports.distribute_reward = async (req, res) => {
       total_stake += parseFloat(stake.purchase_val);
     }
 
+    //status
+
     const promises = [];
     //get user reward
     console.log(total_stake, "totak_stake");
