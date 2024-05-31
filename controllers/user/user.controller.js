@@ -10,6 +10,7 @@ const {
   User,
   userActivity,
   ReferralCode,
+  BVN,
   // ReferralCode,
   PurchaseOrder,
   ReferralList,
