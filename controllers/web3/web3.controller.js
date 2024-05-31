@@ -952,6 +952,18 @@ exports.get = async (req, res) => {
   }
 };
 
+exports.getTickers = async (req, res) => {
+  try {
+    const query = `call sp_getNewThickers()`;
+    const listThickers = await db.sequelize.query(query);
+
+    return successResponse(req, res, { listThickers });
+  } catch (error) {
+    console.log(error);
+    return errorResponse(req, res, error.message);
+  }
+};
+
 cron.schedule(
   "* * * * *",
   async (req, res) => {

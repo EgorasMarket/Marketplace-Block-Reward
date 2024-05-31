@@ -6,16 +6,17 @@ const web3Controller = require("../controllers/web3/web3.controller");
 
 router.get(
   "/test",
-  // loginLimiter,
-  // validate(userValidator.register),
   web3Controller.watch
 );
 
 router.get(
   "/egax/watch",
-  // loginLimiter,
-  // validate(userValidator.register),
   web3Controller.watchEgax
+);
+
+router.get(
+  "/get/price/ticker",
+  web3Controller.getTickers
 );
 
 module.exports = router;
