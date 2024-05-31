@@ -98,3 +98,17 @@ exports.distribute_reward = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
+exports.showFundsInLP = async (req, res) => {
+  try {
+    //fetch amount allocated for pool
+    const rewardConfig = await RewardConfig.findOne();
+
+    if (!rewardConfig) return;
+
+    const amount_in_pool = parseFloat(rewardConfig.reward_pool);
+
+    successResponse(req, res, { amount_in_pool });
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
