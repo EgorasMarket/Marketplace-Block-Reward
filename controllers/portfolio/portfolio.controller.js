@@ -2,7 +2,7 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 
-const { PriceOracle, RewardConfig } = require("../../models");
+const { PriceOracle, RewardConfig, RefEarning } = require("../../models");
 
 const { successResponse, errorResponse } = require("../../helpers");
 
@@ -78,6 +78,74 @@ exports.getUserStakeEarnings = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
+
+exports.getPortfolios = async (req, res) => {
+  try {
+    let user = req.user.email;
+    let query = `call sp_getPortfolios('${user}')`;
+    const result = await db.sequelize.query(query);
+    const getEGcCOinConfig = await PriceOracle.findAll();
+
+    // console.log(getEGcCOinConfig, "dd__kkk");
+
+    result.forEach((item) => {
+      // console.log("user.firstName, user.lastName");
+
+      if (item.symbol === "EGC") {
+        // Update the object with "usd_bal": "45"
+        // item.usd_bal = "45";
+        getEGcCOinConfig.forEach((ggg) => {
+          console.log("LLLLLkkk");
+          console.log(ggg.ids);
+          if (ggg.ids === "egoras-credit") {
+            item.usd_bal = ggg.price;
+          }
+        });
+      }
+
+      if (item.symbol === "EGAX") {
+        // Update the object with "usd_bal": "45"
+        // item.usd_bal = "45";
+        getEGcCOinConfig.forEach((ggg) => {
+          console.log("LLLLLkkk");
+          console.log(ggg.ids);
+          if (ggg.ids === "egax") {
+            item.usd_bal = ggg.price;
+          }
+        });
+      }
+    });
+    // console.log(result);
+    return successResponse(req, res, result);
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
+
+exports.getUserRefEarnings = async (req, res) => {
+  try {
+    let user = req.user.email;
+
+    let query = `SELECT RefEarnings.*, Users.swapRef, Users.username, Products.product_name, Products.product_images FROM RefEarnings JOIN Users ON RefEarnings.referral=Users.email JOIN Products ON Products.id=RefEarnings.product_id WHERE RefEarnings.email='${user}'`;
+    const result = await db.sequelize.query(query);
+
+    const totalAmount = await RefEarning.sum('amount', {
+      where: {
+        email: user
+      }
+    });
+    console.log(result, "llll");
+
+    // console.log(result);
+    return successResponse(req, res, {
+      earningInfo: result[0],
+      totalEarnings: totalAmount
+    });
+  } catch (error) {
+    return errorResponse(req, res, error.message);
+  }
+};
+
 exports.liquidityPoolBalance = async (req, res) => {
   try {
     let balance = 0;

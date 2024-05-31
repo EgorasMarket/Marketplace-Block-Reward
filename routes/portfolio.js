@@ -32,6 +32,12 @@ router.get(
 );
 
 router.get(
+  "/get/my/referral/earnings",
+  // validate(userValidator.login),
+  portfolioController.getUserRefEarnings
+);
+
+router.get(
   "/get/liquity-pool-balance",
   // validate(userValidator.login),
   portfolioController.liquidityPoolBalance
