@@ -86,14 +86,8 @@ exports.PurchaseProduct = async (req, res) => {
         userId: isUser.swapRef,
       },
     });
+    
     console.log(findReferral.refererId, 'LLOO((');
-
-    const referrer = await User.findOne({
-      where: {
-        swapRef: findReferral.refererId,
-      },
-    });
-    console.log(referrer, "kkop");
 
     if (!checkBalance) {
       throw new Error("Insufficient balance to purchase this item.");
@@ -105,7 +99,16 @@ exports.PurchaseProduct = async (req, res) => {
       throw new Error("Insufficient balance to purchase this item.");
     }
 
+    let referrer;
+
     if (findReferral) {
+      referrer = await User.findOne({
+        where: {
+          swapRef: findReferral.refererId,
+        },
+      });
+      console.log(referrer, "kkop");
+
       earnings = finalAmount * 0.10;
     }
 
