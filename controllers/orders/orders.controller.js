@@ -18,6 +18,8 @@ const {
   DeliveryDetails,
   Asset,
   Stake,
+  Referral,
+  RefEarning,
 } = require("../../models");
 const {
   successResponse,
@@ -27,8 +29,11 @@ const {
   addOrder,
   tx,
   add,
+  AddRefEarnings,
+  UpdateRefBalance
 } = require("../../helpers");
 const { symbol } = require("joi");
+const { log } = require("util");
 
 // //send the user the relevant 404 token to managed wallet
 // //send the user the relevant 404 token to managed wallet
@@ -73,6 +78,22 @@ exports.PurchaseProduct = async (req, res) => {
       },
     });
 
+    
+    let earnings = 0;
+    
+    const findReferral = await Referral.findOne({
+      where: {
+        userId: isUser.swapRef,
+      },
+    });
+    console.log('LLOO((');
+
+    const referrer = await User.findOne({
+      where: {
+        swapRef: findReferral.refererId,
+      },
+    });
+
     if (!checkBalance) {
       throw new Error("Insufficient balance to purchase this item.");
     }
@@ -81,6 +102,10 @@ exports.PurchaseProduct = async (req, res) => {
 
     if (finalAmount > parseFloat(checkBalance.value)) {
       throw new Error("Insufficient balance to purchase this item.");
+    }
+
+    if (findReferral) {
+      earnings = finalAmount * 0.10;
     }
 
     await db.sequelize.transaction(async (processPurchase) => {
@@ -102,8 +127,6 @@ exports.PurchaseProduct = async (req, res) => {
       let placeOrder = await addOrder(puPayload, processPurchase);
 
       console.log(placeOrder[0][2].id, "makachi");
-      // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
-      // createPurchase =  await PurchaseOrder.create(puPayload, { transaction: t });
 
       let deductPortfolio = await deduct(
         email,
@@ -129,6 +152,45 @@ exports.PurchaseProduct = async (req, res) => {
         status: "PENDING",
       };
       let createTx = await tx(txPayload, processPurchase);
+
+      let addEarn = false;
+      let incrRefEarn = false;
+
+      if (earnings != 0) {
+        let earnPayload = {
+          referral: email,
+          email: referrer.email,
+          product_id,
+          quantity,
+          amount: finalAmount,
+          earnings
+        }
+
+        let addEarnal = await AddRefEarnings(earnPayload, processPurchase);
+
+        let sendrefPayload = await UpdateRefBalance(
+          "amount",
+          findReferral.userId,
+          findReferral.refererId,
+          earnings,
+          processPurchase
+        );
+
+
+        // console.log(addEarnal[0][1], "LLLK");
+
+        if (addEarnal[0][1] == true) {
+          addEarn = true
+        }
+
+        if (sendrefPayload[0][1] == true) {
+          incrRefEarn = true
+        }
+
+      }
+
+      console.log(addEarn, placeOrder[0][1], "HHHHHJJ");
+
       const prod_stake = await ProductStake(
         {
           product: checkProduct,
@@ -157,10 +219,12 @@ exports.PurchaseProduct = async (req, res) => {
         !deductQuantity[0][1] &&
         !placeOrder[0][1] &&
         !createTx[0][1] &&
+        !addEarn &&
+        !incrRefEarn &&
         !deductPortfolio[0][1]
       ) {
         console.log("kjoijoijoi");
-        // processPurchase.rollback();
+        processPurchase.rollback();
         return errorResponse(req, res, {
           message: "An error eccurred, try again",
         });

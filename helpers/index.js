@@ -11,6 +11,8 @@ const {
   Bridge,
   PurchaseOrder,
   Product,
+  RefEarning,
+  Referral
 } = require("../models");
 
 const Sequelize = require("sequelize");
@@ -177,6 +179,21 @@ exports.Depoxit = async (payload, t) => {
   try {
     const createTx = await Deposit.create(payload, { transaction: t });
 
+    if (createTx) {
+      // io.emit(`transaction/${email}`, payload);
+      return [[undefined, 1]];
+    }
+    return [[undefined, 0]];
+  } catch (error) {
+    console.log(error);
+    return [[undefined, 0]];
+  }
+};
+
+exports.AddRefEarnings = async (payload, t) => {
+  try {
+    const createTx = await RefEarning.create(payload, { transaction: t });
+    
     if (createTx) {
       // io.emit(`transaction/${email}`, payload);
       return [[undefined, 1]];
@@ -451,6 +468,43 @@ exports.add = async (email, symbol, which, colunm, amount, t) => {
     default:
       return null;
   }
+};
+
+exports.UpdateRefBalance = async (colunm, userId, refererId, amount, t) => {
+  try {
+    const createTx = await Referral.update(
+      { 
+        amount: Sequelize.literal("amount + " + amount),
+        status: "ACTIVE"
+      },
+      { 
+        where: { 
+          userId,
+          refererId 
+        }
+      }
+    );
+
+    if (createTx) {
+      // io.emit(`transaction/${email}`, payload);
+      return [[undefined, 1]];
+    }
+    return [[undefined, 0]];
+  } catch (error) {
+    console.log(error);
+    return [[undefined, 0]];
+  }
+  // console.log("increment Port");
+  // const userPortfolio = await Referral.increment(colunm, {
+  //   by: amount,
+  //   transaction: t,
+  //   where: { 
+  //     userId,
+  //     refererId 
+  //   },
+  // });
+  // console.log(userPortfolio, 'fnodim');
+  // return userPortfolio;
 };
 
 exports.deduct = async (email, symbol, which, colunm, amount, t) => {
