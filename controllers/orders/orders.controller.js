@@ -89,7 +89,7 @@ exports.PurchaseProduct = async (req, res) => {
     });
     console.log("JJIOJIJ");
     
-    console.log(findReferral.refererId, 'LLOO((');
+    console.log(findReferral, 'LLOO((');
 
     if (!checkBalance) {
       throw new Error("Insufficient balance to purchase this item.");
