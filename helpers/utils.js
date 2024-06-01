@@ -29,7 +29,11 @@ exports.sendTemplate = (
       });
   } catch (error) {}
 };
-exports.sendTemplateAlt = async ({ subject, name = "Egoras", message }) => {
+exports.sendTemplateAlt = async ({
+  subject,
+  name = "Market Place",
+  message,
+}) => {
   try {
     const payload = {
       subject,

@@ -378,6 +378,7 @@ exports.initialAddDirect = async (req, res) => {
       user_wallet: userAddress,
       quantity: productQuantity,
       product_specifications: prod_spec,
+      isFeatured: 0,
       //   user_amount: parseFloat(product_amount),
       amount: parseFloat(product_amount),
     };
@@ -769,29 +770,6 @@ exports.FetchProductByCategory = async (req, res) => {
     const fetchProduct = await Product.findAll({
       where: {
         product_category: category,
-      },
-    });
-
-    return res.status(200).json({
-      success: true,
-      data: fetchProduct,
-    });
-  } catch (err) {
-    return errorResponse(req, res, err.message, 500, err);
-  }
-};
-exports.fetchDashboardData = async (req, res) => {
-  const { category } = req.params;
-  try {
-    const products_bought = await Product.findAll({
-      where: {
-        email: req.user.email,
-      },
-    });
-
-    const amount_earned = await Stake.findAll({
-      where: {
-        user_id: req.user.userId,
       },
     });
 
