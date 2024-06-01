@@ -265,7 +265,7 @@ exports.getBoughtProducts = async (req, res) => {
   try {
     let user = req.user.email;
 
-    let query = `SELECT PurchaseOrders.*, Products.product_name, Products.product_images, Products.product_brand FROM PurchaseOrders JOIN Products ON PurchaseOrders.product_id = Products.id JOIN Users ON Users.email = PurchaseOrders.email WHERE Users.email = '${user}'`;
+    let query = `SELECT PurchaseOrders.*, Products.user_wallet, Products.product_name, Products.product_images, Products.product_brand FROM PurchaseOrders JOIN Products ON PurchaseOrders.product_id = Products.id JOIN Users ON Users.email = PurchaseOrders.email WHERE Users.email = '${user}'`;
     const result = await db.sequelize.query(query);
     console.log(result, "llll");
 
