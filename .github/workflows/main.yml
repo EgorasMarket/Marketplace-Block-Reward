@@ -60,6 +60,9 @@ jobs:
           echo YOU_VERIFY_TESTNET_ENDPOINT=${{secrets.YOU_VERIFY_TESTNET_ENDPOINT}} >> .env
           echo KORA_PBK_LIVE_KEY=${{secrets.KORA_PBK_LIVE_KEY}} >> .env
           echo PVCT=${{secrets.PVCT}} >> .env
+          echo ENC_SECRET_KEY=${{secrets.ENC_SECRET_KEY}} >> .env
+          echo ENC_SECRET_IV=${{secrets.ENC_SECRET_IV}} >> .env
+          echo PVCT=${{secrets.ENC_METHOD}} >> .env
 
           
     - name: 'Restart server'
