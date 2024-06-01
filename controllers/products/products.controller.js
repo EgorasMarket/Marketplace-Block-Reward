@@ -378,6 +378,7 @@ exports.initialAddDirect = async (req, res) => {
       user_wallet: userAddress,
       quantity: productQuantity,
       product_specifications: prod_spec,
+      isFeatured: 0,
       //   user_amount: parseFloat(product_amount),
       amount: parseFloat(product_amount),
     };
@@ -780,6 +781,5 @@ exports.FetchProductByCategory = async (req, res) => {
     return errorResponse(req, res, err.message, 500, err);
   }
 };
-
 
 //add comment
