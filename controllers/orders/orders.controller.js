@@ -80,6 +80,8 @@ exports.PurchaseProduct = async (req, res) => {
 
     
     let earnings = 0;
+
+    console.log("JJIOJIJ");
     
     const findReferral = await Referral.findOne({
       where: {
