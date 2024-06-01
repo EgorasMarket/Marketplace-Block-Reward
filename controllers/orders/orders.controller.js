@@ -169,6 +169,9 @@ exports.PurchaseProduct = async (req, res) => {
 
         let addEarnal = await AddRefEarnings(earnPayload, processPurchase);
 
+        console.log(findReferral.userId,
+          findReferral.refererId, "KHJVCB");
+
         let sendrefPayload = await UpdateRefBalance(
           "amount",
           findReferral.userId,
