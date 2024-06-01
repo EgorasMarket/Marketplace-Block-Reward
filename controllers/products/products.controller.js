@@ -780,28 +780,6 @@ exports.FetchProductByCategory = async (req, res) => {
     return errorResponse(req, res, err.message, 500, err);
   }
 };
-exports.fetchDashboardData = async (req, res) => {
-  const { category } = req.params;
-  try {
-    const products_bought = await Product.findAll({
-      where: {
-        email: req.user.email,
-      },
-    });
 
-    const amount_earned = await Stake.findAll({
-      where: {
-        user_id: req.user.userId,
-      },
-    });
-
-    return res.status(200).json({
-      success: true,
-      data: fetchProduct,
-    });
-  } catch (err) {
-    return errorResponse(req, res, err.message, 500, err);
-  }
-};
 
 //add comment

@@ -64,6 +64,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      isFeatured: {
+        type: DataTypes.STRING,
+        default: 0,
+      },
     },
     {}
   );

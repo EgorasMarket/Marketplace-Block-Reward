@@ -37,8 +37,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "https://egochain.org",
-  "https://earn.egoras.com/",
-  "https://www.earn.egoras.com/",
+  "https://earn.egoras.com",
+  "https://www.earn.egoras.com",
   "https://www.event.egochain.org",
 ];
 app.use(morgan("dev"));
