@@ -216,11 +216,11 @@ exports.PurchaseProduct = async (req, res) => {
       });
       console.log(settlement, "ass");
       if (
-        !deductQuantity[0][1] &&
-        !placeOrder[0][1] &&
-        !createTx[0][1] &&
-        !addEarn &&
-        !incrRefEarn &&
+        !deductQuantity[0][1] ||
+        !placeOrder[0][1] ||
+        !createTx[0][1] ||
+        !addEarn ||
+        !incrRefEarn ||
         !deductPortfolio[0][1]
       ) {
         console.log("kjoijoijoi");
