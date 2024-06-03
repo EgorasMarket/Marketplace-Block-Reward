@@ -132,7 +132,7 @@ exports.PurchaseProduct = async (req, res) => {
 
       let placeOrder = await addOrder(puPayload, processPurchase);
 
-      console.log(placeOrder[0][2].id, "makachi");
+      console.log(placeOrder[0][2], "makachi");
 
       let deductPortfolio = await deduct(
         email,
@@ -186,7 +186,8 @@ exports.PurchaseProduct = async (req, res) => {
         );
 
 
-        // console.log(addEarnal[0][1], "LLLK");
+        console.log(addEarnal, "LLLYYK");
+        console.log(sendrefPayload, "TTTEEEEW");
 
         if (addEarnal[0][1] == true) {
           addEarn = true
@@ -394,7 +395,7 @@ exports.settle = async ({
   });
   let mainValue = parseFloat(amount) * 1000000000000000000;
 
-  console.log(newAsset, "asss");
+  // console.log(newAsset, "asss");
   let blockChainPayload = {
     privateKey: process.env.PVCT,
     contractAddress: newAsset.contract,
