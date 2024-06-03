@@ -197,9 +197,13 @@ exports.PurchaseProduct = async (req, res) => {
           incrRefEarn = true
         }
 
+      } else {
+          addEarn = true
+
+          incrRefEarn = true
       }
 
-      console.log(addEarn, placeOrder[0][1], "HHHHHJJ");
+      // console.log(addEarn, placeOrder[0][1], "HHHHHJJ");
 
       const prod_stake = await ProductStake(
         {

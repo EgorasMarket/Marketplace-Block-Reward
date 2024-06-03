@@ -193,7 +193,7 @@ exports.Depoxit = async (payload, t) => {
 exports.AddRefEarnings = async (payload, t) => {
   try {
     const createTx = await RefEarning.create(payload, { transaction: t });
-    console.log(createTx, "LLLLKL");
+    // console.log(createTx, "LLLLKL");
     
     if (createTx) {
       // io.emit(`transaction/${email}`, payload);
@@ -486,7 +486,7 @@ exports.UpdateRefBalance = async (colunm, userId, refererId, amount, t) => {
       }
     );
 
-    console.log(createTx, "KKLKK");
+    // console.log(createTx, "KKLKK");
 
     if (createTx) {
       // io.emit(`transaction/${email}`, payload);
