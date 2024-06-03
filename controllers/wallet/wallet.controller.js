@@ -41,7 +41,7 @@ const {
 } = require("../../helpers");
 const { log } = require("console");
 const { getAblyInstance } = require("../ably/init");
-const { encryptData } = require("../../controllers/encryption/encryption.controller");
+// const { encryptData } = require("../../controllers/encryption/encryption.controller");
 
 var provider = "https://endpoints.omniatech.io/v1/bsc/mainnet/public";
 var provider2 = "https://mainnet.egochain.org";
@@ -2044,7 +2044,8 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
         await Wallet.create({
           blockchain: "BINANCE",
           address: result.data.data.address,
-          meta: encryptData(JSON.stringify(result.data.data)),
+          meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: email,
         });
       } else {
@@ -2052,7 +2053,8 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
         await Wallet.create({
           blockchain: asset.blockchain,
           address: result.data.data.address,
-          meta: encryptData(JSON.stringify(result.data.data)),
+          meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: email,
         });
       }
@@ -2295,7 +2297,8 @@ exports.get = async (req, res) => {
         await Wallet.create({
           blockchain: "BINANCE",
           address: result.data.data.address,
-          meta: encryptData(JSON.stringify(result.data.data)),
+          meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: req.user.email,
         });
       } else {
@@ -2303,7 +2306,8 @@ exports.get = async (req, res) => {
         await Wallet.create({
           blockchain: asset.blockchain,
           address: result.data.data.address,
-          meta: encryptData(JSON.stringify(result.data.data)),
+          meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: req.user.email,
         });
       }

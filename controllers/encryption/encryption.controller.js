@@ -1,4 +1,5 @@
-// encryption.js
+const dotenv = require("dotenv");
+dotenv.config();
 const crypto = require("crypto");
 const config = require("./config.js");
 

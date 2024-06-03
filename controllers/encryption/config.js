@@ -1,4 +1,5 @@
-const dotenv = require("dotenv").config();
+const dotenv = require("dotenv");
+dotenv.config();
 
 const { ENC_SECRET_KEY, ENC_SECRET_IV, ENC_METHOD } = process.env;
 

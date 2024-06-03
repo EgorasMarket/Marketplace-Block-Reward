@@ -224,6 +224,12 @@ exports.PurchaseProduct = async (req, res) => {
         transaction: processPurchase,
       });
       console.log(settlement, "ass");
+      console.log(deductQuantity[0][1], "deductQuantity");
+      console.log(placeOrder[0][1], "placeOrder");
+      console.log(createTx[0][1], "createTx");
+      console.log(addEarn, "addEarn");
+      console.log(incrRefEarn, "incrRefEarn");
+      console.log(deductPortfolio[0][1], "deductPortfolio");
       if (
         !deductQuantity[0][1] ||
         !placeOrder[0][1] ||
