@@ -33,6 +33,7 @@ const db = require("../../config/sequelize");
 const { sendTemplate } = require("../../helpers/utils");
 const { fetchOrGenerateNewWallet } = require("../web3/web3.controller");
 const axiosCustom = require("axios").default;
+// const { encryptData } = require("../../controllers/encryption/encryption.controller");
 
 const instance = axiosCustom.create({
   baseURL: process.env.BLOCKCHAIN_ENDPOINT,

@@ -193,6 +193,7 @@ exports.Depoxit = async (payload, t) => {
 exports.AddRefEarnings = async (payload, t) => {
   try {
     const createTx = await RefEarning.create(payload, { transaction: t });
+    // console.log(createTx, "LLLLKL");
     
     if (createTx) {
       // io.emit(`transaction/${email}`, payload);
@@ -200,7 +201,7 @@ exports.AddRefEarnings = async (payload, t) => {
     }
     return [[undefined, 0]];
   } catch (error) {
-    console.log(error);
+    console.log(error, "AddRefEarnings");
     return [[undefined, 0]];
   }
 };
@@ -485,13 +486,15 @@ exports.UpdateRefBalance = async (colunm, userId, refererId, amount, t) => {
       }
     );
 
+    // console.log(createTx, "KKLKK");
+
     if (createTx) {
       // io.emit(`transaction/${email}`, payload);
       return [[undefined, 1]];
     }
     return [[undefined, 0]];
   } catch (error) {
-    console.log(error);
+    console.log(error, "UpdateRefBalance");
     return [[undefined, 0]];
   }
   // console.log("increment Port");

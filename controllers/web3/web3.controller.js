@@ -12,7 +12,7 @@ const {
 } = require("../../helpers");
 const db = require("../../config/sequelize");
 const { Op } = require("sequelize");
-
+// const  encryptData  = require("../../controllers/encryption/encryption.controller");
 
 const cron = require("node-cron");
 
@@ -581,6 +581,7 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
           blockchain: "BINANCE",
           address: result.data.data.address,
           meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: email,
         });
         await Portfolio.create(
@@ -599,6 +600,7 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
           blockchain: asset.blockchain,
           address: result.data.data.address,
           meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: email,
         });
         await Portfolio.create(
@@ -796,7 +798,8 @@ exports.get = async (req, res) => {
         await Wallet.create({
           blockchain: "BINANCE",
           address: result.data.data.address,
-          meta: encryptData(JSON.stringify(result.data.data)),
+          meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: req.user.email,
         });
       } else {
@@ -804,7 +807,8 @@ exports.get = async (req, res) => {
         await Wallet.create({
           blockchain: asset.blockchain,
           address: result.data.data.address,
-          meta: encryptData(JSON.stringify(result.data.data)),
+          meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: req.user.email,
         });
       }

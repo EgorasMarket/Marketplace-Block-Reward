@@ -34,6 +34,7 @@ const {
 } = require("../../helpers");
 const { symbol } = require("joi");
 const { log } = require("util");
+const { response } = require("express");
 
 // //send the user the relevant 404 token to managed wallet
 // //send the user the relevant 404 token to managed wallet
@@ -87,13 +88,9 @@ exports.PurchaseProduct = async (req, res) => {
         userId: isUser.swapRef,
       },
     });
-    console.log("LLOO((");
+    console.log("JJIOJIJ");
 
-    const referrer = await User.findOne({
-      where: {
-        swapRef: findReferral.refererId,
-      },
-    });
+    console.log(findReferral, "LLOO((");
 
     if (!checkBalance) {
       throw new Error("Insufficient balance to purchase this item.");
@@ -105,7 +102,16 @@ exports.PurchaseProduct = async (req, res) => {
       throw new Error("Insufficient balance to purchase this item.");
     }
 
+    let referrer;
+
     if (findReferral) {
+      referrer = await User.findOne({
+        where: {
+          swapRef: findReferral.refererId,
+        },
+      });
+      console.log(referrer, "kkop");
+
       earnings = finalAmount * 0.1;
     }
 
@@ -127,7 +133,7 @@ exports.PurchaseProduct = async (req, res) => {
 
       let placeOrder = await addOrder(puPayload, processPurchase);
 
-      console.log(placeOrder[0][2].id, "makachi");
+      console.log(placeOrder[0][2], "makachi");
 
       let deductPortfolio = await deduct(
         email,
@@ -169,6 +175,8 @@ exports.PurchaseProduct = async (req, res) => {
 
         let addEarnal = await AddRefEarnings(earnPayload, processPurchase);
 
+        console.log(findReferral.userId, findReferral.refererId, "KHJVCB");
+
         let sendrefPayload = await UpdateRefBalance(
           "amount",
           findReferral.userId,
@@ -177,7 +185,8 @@ exports.PurchaseProduct = async (req, res) => {
           processPurchase
         );
 
-        // console.log(addEarnal[0][1], "LLLK");
+        console.log(addEarnal, "LLLYYK");
+        console.log(sendrefPayload, "TTTEEEEW");
 
         if (addEarnal[0][1] == true) {
           addEarn = true;
@@ -186,9 +195,13 @@ exports.PurchaseProduct = async (req, res) => {
         if (sendrefPayload[0][1] == true) {
           incrRefEarn = true;
         }
+      } else {
+        addEarn = true;
+
+        incrRefEarn = true;
       }
 
-      console.log(addEarn, placeOrder[0][1], "HHHHHJJ");
+      // console.log(addEarn, placeOrder[0][1], "HHHHHJJ");
 
       const prod_stake = await ProductStake(
         {
@@ -205,27 +218,25 @@ exports.PurchaseProduct = async (req, res) => {
         }
       );
 
-      const settlement = await this.settle({
-        wallet_address: req.user.wallet_address,
-        amount: quantity,
-        symbol: checkProduct.token_type,
-        user_id: req.user.userId,
-        email: req.user.email,
-        transaction: processPurchase,
-      });
-      console.log(settlement, "ass");
+      console.log(deductQuantity[0][1], "deductQuantity");
+      console.log(placeOrder[0][1], "placeOrder");
+      console.log(createTx[0][1], "createTx");
+      console.log(addEarn, "addEarn");
+      console.log(incrRefEarn, "incrRefEarn");
+      console.log(deductPortfolio[0][1], "deductPortfolio");
       if (
-        !deductQuantity[0][1] &&
-        !placeOrder[0][1] &&
-        !createTx[0][1] &&
-        !addEarn &&
-        !incrRefEarn &&
+        !deductQuantity[0][1] ||
+        !placeOrder[0][1] ||
+        !createTx[0][1] ||
+        !addEarn ||
+        !incrRefEarn ||
         !deductPortfolio[0][1]
+        // || prod_stake.success === false
       ) {
         console.log("kjoijoijoi");
         processPurchase.rollback();
         return errorResponse(req, res, {
-          message: "An error eccurred, try again",
+          message: "An error eccurred, try agains",
         });
       } else {
         return successResponse(req, res, {});
@@ -315,11 +326,24 @@ const ProductStake = async ({
       quantity,
       transaction
     );
+    console.log("pre-colonial");
 
-    if (result && addToPortfolio) {
+    const settlement = await this.settle({
+      wallet_address: user.wallet_address,
+      amount: quantity,
+      symbol: product.token_type,
+      user_id: user.userId,
+      email: user.email,
+      transaction,
+    });
+
+    console.log(settlement, "this is settlement");
+    if (result && addToPortfolio && settlement) {
       console.log("result yes");
+
       return {
         success: true,
+        settlement,
       };
     }
 
@@ -378,7 +402,7 @@ exports.settle = async ({
   });
   let mainValue = parseFloat(amount) * 1000000000000000000;
 
-  console.log(newAsset, "asss");
+  // console.log(newAsset, "asss");
   let blockChainPayload = {
     privateKey: process.env.PVCT,
     contractAddress: newAsset.contract,
@@ -413,54 +437,38 @@ exports.settle = async ({
       },
     ],
   };
-
   // console.log(blockChainPayload);
 
-  // Make a POST request using Axios
-  axios
-    .post(
-      "https://bx.hollox.finance/mcw/send/to/erc20/chains",
-      blockChainPayload
-      // config
-    )
-    .then((response) => {
-      // Handle successful response here
-      console.log("Goodluck:", response.data.data.data);
+  const request = await axios.post(
+    "https://bx.hollox.finance/mcw/send/to/erc20/chains",
+    blockChainPayload
+    // config
+  );
+  console.log(request.data);
 
-      // let ffff = {
-      //   ...response.data.data.data.data,
-      //   ...JSON.parse(cashout.meta),
-      // };
-
-      if (response.data.success == true) {
-        const meta = {
-          ...response.data.data.data.data,
-          stake_id,
-        };
-        Transactions.create(
-          {
-            status: "SUCCESS",
-            meta,
-            type: "NFT-CREDIT",
-            amount,
-            email,
-            to_email: email,
-          },
-          {
-            // transaction,
-          }
-        );
+  if (request.data.success) {
+    const meta = {
+      ...request.data.data.data.data,
+      stake_id,
+    };
+    const trans = await Transactions.create(
+      {
+        status: "SUCCESS",
+        meta,
+        type: "NFT-CREDIT",
+        amount,
+        email,
+        to_email: email,
+      },
+      {
+        transaction,
       }
-    })
-    .catch((error) => {
-      // Handle error here
-      // transaction.rollback();
-      console.error("Error: Withdrawal failed", error.response);
-    })
-    .finally(() => {
-      // This block is executed regardless of success or failure
-      console.log("Request complyhoeted");
-    });
+    );
+    console.log(trans, "this is trans");
+
+    if (trans) return true;
+  }
+  return false;
 };
 function removeWhitespace(str) {
   return str.replace(/\s/g, "");

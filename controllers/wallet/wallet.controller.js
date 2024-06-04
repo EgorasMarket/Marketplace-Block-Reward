@@ -41,6 +41,7 @@ const {
 } = require("../../helpers");
 const { log } = require("console");
 const { getAblyInstance } = require("../ably/init");
+// const { encryptData } = require("../../controllers/encryption/encryption.controller");
 
 var provider = "https://endpoints.omniatech.io/v1/bsc/mainnet/public";
 var provider2 = "https://mainnet.egochain.org";
@@ -1903,179 +1904,6 @@ exports.BridgeWatch = async (req, res) => {
   }
 };
 
-// exports.watchEgochainUSDT = async (req, res) => {
-//   try {
-//     // Calculate the timestamp 15 minutes ago
-//     const fifteenMinutesAgo = new Date(new Date() - 15 * 60 * 1000);
-//     let watches = await EgoWatch.findAll({
-//       where: {
-//         symbol: {
-//           [Op.eq]: "USD",
-//         },
-//         // updatedAt: {
-//         //   [Op.lte]: fifteenMinutesAgo,
-//         // },
-//       },
-//       order: [
-//         ["id", "DESC"],
-//         ["updatedAt", "DESC"],
-//       ],
-//     });
-//     // console.log(watches);
-
-//     if (watches) {
-//       // console.log("BBBB");
-//       watches.forEach(async (watch) => {
-//         //console.log(watch.symbol);
-//         let asset = await Asset.findOne({
-//           where: { symbol: "USDE", blockchain: "EGOCHAIN" },
-//         });
-//         // console.log(asset, "kkkLLL");
-//         if (asset) {
-//           console.log("KKOOKK");
-
-//           var instance = new web4.eth.Contract(abi, asset.contract);
-
-//           const options = {
-//             filter: {
-//               to: watch.address,
-//             },
-//             fromBlock: parseInt(watch.block) + 1,
-//             toBlock: parseInt(watch.block) + 3000,
-//           };
-
-//           let returned_event = [];
-//           returned_event = await instance.getPastEvents("Transfer", options);
-//           // let blockNumber = await web4.eth.getBlockNumber();
-
-//           // block = result.data.data.block;
-//           console.log(returned_event);
-//           if (returned_event.length > 0) {
-//             returned_event.forEach(async (deposit) => {
-//               console.log(deposit.confirmations);
-//               console.log(deposit.to);
-
-//               await db.sequelize.transaction(async (addDeposit) => {
-//                 if (
-//                   deposit.returnValues.to.toLowerCase() ==
-//                   watch.address.toLowerCase()
-//                 ) {
-//                   let findDepositHash = await Deposit.findOne({
-//                     where: { hash: deposit.transactionHash },
-//                   });
-//                   if (!findDepositHash) {
-//                     let amount =
-//                       parseInt(deposit.returnValues.value) /
-//                       1000000000000000000;
-//                     let addFund = await add(
-//                       watch.email,
-//                       watch.symbol,
-//                       "portfolio",
-//                       "value",
-//                       amount,
-//                       addDeposit
-//                     );
-//                     const enterHash = await Deposit.create(
-//                       {
-//                         hash: deposit.transactionHash,
-//                         blockchain: "EGOCHAIN",
-//                       },
-//                       { transaction: addDeposit }
-//                     );
-
-//                     let ntPayload = {
-//                       email: watch.email,
-//                       meta: {
-//                         symbol: watch.symbol,
-//                         amount: amount.toString(),
-//                         type: "deposit",
-//                       },
-//                     };
-//                     let createNt = await nt(ntPayload, addDeposit);
-
-//                     let txPayload = {
-//                       email: watch.email,
-//                       to_email: watch.email,
-//                       meta: {
-//                         symbol: watch.symbol,
-//                         txh: deposit.transactionHash,
-//                         confirmation: "3/3",
-//                         network: "EGOCHAIN",
-//                         wallet_address: deposit.to,
-//                       },
-
-//                       amount: amount,
-//                       type: "DEPOSIT",
-//                       status: "SUCCESS",
-//                     };
-//                     let createTx = await tx(txPayload, addDeposit);
-//                     let updateWatch = await EgoWatch.update(
-//                       { block: deposit.blockNumber },
-//                       { where: { symbol: watch.symbol, email: watch.email } }
-//                     );
-//                     if (
-//                       !addFund[0][1] &&
-//                       !enterHash &&
-//                       !createNt[0][1] &&
-//                       !createTx[0][1] &&
-//                       !updateWatch[0][1]
-//                     ) {
-//                       addDeposit.rollback();
-//                     } else {
-//                       let userPayload = await User.findOne({
-//                         where: { email: watch.email },
-//                       });
-
-//                       console.log("User Does Not Exist");
-//                       if (userPayload) {
-//                         var dynamic_template_data = {
-//                           amount: amount,
-//                           symbol: watch.symbol,
-//                           subject: "Egax Deposit Confirmation",
-//                           name:
-//                             userPayload.firstName + ", " + userPayload.lastName,
-//                         };
-//                         sendTemplate(
-//                           watch.email,
-//                           process.env.FROM,
-//                           process.env.DEPOSIT_TEMPLATE_ID,
-//                           dynamic_template_data
-//                         );
-
-//                         //  throw new Error('');
-//                       } else {
-//                         throw new Error("22");
-//                       }
-//                     }
-//                   }
-//                 } else {
-//                   throw new Error("11");
-//                 }
-//               });
-//             });
-//           } else {
-//             if (parseInt(block) + 4899 > returned_event.currentBlock) {
-//               await Watch.update(
-//                 { block: returned_event.currentBlock },
-//                 { where: { symbol, email: email } }
-//               );
-//             } else {
-//               await Watch.update(
-//                 { block: parseInt(block) + 4899 },
-//                 { where: { symbol, email: email } }
-//               );
-//             }
-//           }
-//         }
-//       });
-//     }
-//     return successResponse(req, res, {});
-//   } catch (error) {
-//     console.log(error);
-//     return errorResponse(req, res, error.message);
-//   }
-// };
-
 exports.getTransactionHistory = async (req, res) => {
   try {
     console.log("llls");
@@ -2217,6 +2045,7 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
           blockchain: "BINANCE",
           address: result.data.data.address,
           meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: email,
         });
       } else {
@@ -2225,6 +2054,7 @@ exports.fetchOrGenerateNewWallet = async ({ email, symbol }) => {
           blockchain: asset.blockchain,
           address: result.data.data.address,
           meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: email,
         });
       }
@@ -2468,6 +2298,7 @@ exports.get = async (req, res) => {
           blockchain: "BINANCE",
           address: result.data.data.address,
           meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: req.user.email,
         });
       } else {
@@ -2476,6 +2307,7 @@ exports.get = async (req, res) => {
           blockchain: asset.blockchain,
           address: result.data.data.address,
           meta: result.data.data,
+          // meta: encryptData(JSON.stringify(result.data.data)),
           email: req.user.email,
         });
       }
@@ -2617,206 +2449,3 @@ exports.get = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
-
-// exports.get = async (req, res) => {
-//   try {
-//     const { symbol } = req.body;
-
-//     let asset = await Asset.findOne({ where: { symbol } });
-
-//     if (!asset) {
-//       throw new Error("Account not listed");
-//     }
-
-//     let wallet = await Wallet.findOne({
-//       where: { blockchain: asset.blockchain, email: req.user.email },
-//     });
-//     let address;
-//     let result;
-//     let block = 0;
-//     if (!wallet) {
-//       // generate wallet
-//       switch (asset.blockchain) {
-//         case "ETHEREUM":
-//           result = await instance.get("ethereum/create/wallet");
-//           block = result.data.data.block;
-//           break;
-//         case "BINANCE":
-//           result = await instance.get("binance/create/wallet");
-//           block = result.data.data.block;
-//           break;
-//         case "BITCOIN":
-//           result = await instance.get("bitcoin/create/wallet");
-//           break;
-
-//         default:
-//           throw new Error("Blockchain not found");
-//       }
-//       await Wallet.create({
-//         blockchain: asset.blockchain,
-//         address: result.data.data.address,
-//         meta: result.data.data,
-//         email: req.user.email,
-//       });
-
-//       // console.log(result.data.data);
-//       address = result.data.data.address;
-//     } else {
-//       let watch = await Watch.findOne({
-//         where: { address: wallet.address, email: req.user.email },
-//         order: [["createdAt", "DESC"]],
-//       });
-
-//       if (watch) {
-//         block = watch.block;
-//       } else {
-//         block = JSON.parse(wallet.meta).block;
-//       }
-
-//       address = wallet.address;
-//     }
-
-//     if (address != "") {
-//       let watch = await Watch.findOne({
-//         where: { symbol, email: req.user.email },
-//       });
-//       if (watch) {
-//         await Watch.update(
-//           { symbol, email: req.user.email },
-//           { where: { symbol, email: req.user.email } }
-//         );
-//       } else {
-//         await Watch.create({
-//           symbol,
-//           email: req.user.email,
-//           block: block,
-//           address,
-//         });
-//       }
-//     }
-
-//     let message = "";
-//     if (asset.blockchain == "ETHEREUM") {
-//       message =
-//         "Send only " +
-//         symbol +
-//         " to this deposit address. \nEnsure the network is Ethereum (ERC20). \nDo not send NFTs to this address.";
-//     } else if (asset.blockchain == "BINANCE") {
-//       message =
-//         "Send only " +
-//         symbol +
-//         " to this deposit address. \nEnsure the network is BNB Smart Chain (BEP20). \nDo not send NFTs to this address";
-//     } else if (asset.blockchain == "BITCOIN") {
-//       message =
-//         "Send only " +
-//         symbol +
-//         " to this deposit address. \nEnsure the network is Bitcoin. \nDo not send NFTs to this address";
-//     }
-
-//     return successResponse(req, res, { address, message });
-//   } catch (error) {
-//     console.log(error);
-//     return errorResponse(req, res, error.message);
-//   }
-// };
-
-// exports.get2 = async (req, res) => {
-//   try {
-//     const { symbol } = req.body;
-
-//     let asset = await Asset.findOne({ where: { symbol } });
-
-//     if (!asset) {
-//       throw new Error("Account not listed");
-//     }
-
-//     let wallet = await Wallet.findOne({
-//       where: { blockchain: asset.blockchain, email: req.user.email },
-//     });
-//     let address;
-//     let result;
-//     let block = 0;
-//     if (!wallet) {
-//       // generate wallet
-//       switch (asset.blockchain) {
-//         case "ETHEREUM":
-//           result = await instance.get("ethereum/create/wallet");
-//           block = result.data.data.block;
-//           break;
-//         case "BINANCE":
-//           result = await instance.get("binance/create/wallet");
-//           block = result.data.data.block;
-//           break;
-//         case "BITCOIN":
-//           result = await instance.get("bitcoin/create/wallet");
-//           break;
-
-//         default:
-//           throw new Error("Blockchain not found");
-//       }
-//       await Wallet.create({
-//         blockchain: asset.blockchain,
-//         address: result.data.data.address,
-//         meta: result.data.data,
-//         email: req.user.email,
-//       });
-
-//       // console.log(result.data.data);
-//       address = result.data.data.address;
-//     } else {
-//       let watch = await Watch.findOne({
-//         where: { address: wallet.address, email: req.user.email },
-//         order: [["createdAt", "DESC"]],
-//       });
-
-//       if (watch) {
-//         block = watch.block;
-//       } else {
-//         block = JSON.parse(wallet.meta).block;
-//       }
-
-//       address = wallet.address;
-//     }
-
-//     if (address != "") {
-//       let watch = await Watch.findOne({
-//         where: { symbol, email: req.user.email },
-//       });
-//       if (watch) {
-//         await Watch.update(
-//           { symbol, email: req.user.email },
-//           { where: { symbol, email: req.user.email } }
-//         );
-//       } else {
-//         await Watch.create({
-//           symbol,
-//           email: req.user.email,
-//           block: block,
-//           address,
-//         });
-//       }
-//     }
-
-//     let message = "";
-//     if (asset.blockchain == "ETHEREUM") {
-//       message =
-//         "Send only " +
-//         symbol +
-//         " to this deposit address. \nEnsure the network is Ethereum (ERC20). \nDo not send NFTs to this address.";
-//     } else if (asset.blockchain == "BINANCE") {
-//       message =
-//         "Send only " +
-//         symbol +
-//         " to this deposit address. \nEnsure the network is BNB Smart Chain (BEP20). \nDo not send NFTs to this address";
-//     } else if (asset.blockchain == "BITCOIN") {
-//       message =
-//         "Send only " +
-//         symbol +
-//         " to this deposit address. \nEnsure the network is Bitcoin. \nDo not send NFTs to this address";
-//     }
-
-//     return successResponse(req, res, { address, message });
-//   } catch (error) {
-//     return errorResponse(req, res, error.message);
-//   }
-// };
