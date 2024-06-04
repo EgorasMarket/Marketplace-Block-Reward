@@ -30,7 +30,7 @@ const {
   tx,
   add,
   AddRefEarnings,
-  UpdateRefBalance
+  UpdateRefBalance,
 } = require("../../helpers");
 const { symbol } = require("joi");
 const { log } = require("util");
@@ -78,15 +78,16 @@ exports.PurchaseProduct = async (req, res) => {
       },
     });
 
-    
+    // "Cannot read property 'refererId' of null"
+
     let earnings = 0;
-    
+
     const findReferral = await Referral.findOne({
       where: {
         userId: isUser.swapRef,
       },
     });
-    console.log('LLOO((');
+    console.log("LLOO((");
 
     const referrer = await User.findOne({
       where: {
@@ -105,7 +106,7 @@ exports.PurchaseProduct = async (req, res) => {
     }
 
     if (findReferral) {
-      earnings = finalAmount * 0.10;
+      earnings = finalAmount * 0.1;
     }
 
     await db.sequelize.transaction(async (processPurchase) => {
@@ -163,8 +164,8 @@ exports.PurchaseProduct = async (req, res) => {
           product_id,
           quantity,
           amount: finalAmount,
-          earnings
-        }
+          earnings,
+        };
 
         let addEarnal = await AddRefEarnings(earnPayload, processPurchase);
 
@@ -176,17 +177,15 @@ exports.PurchaseProduct = async (req, res) => {
           processPurchase
         );
 
-
         // console.log(addEarnal[0][1], "LLLK");
 
         if (addEarnal[0][1] == true) {
-          addEarn = true
+          addEarn = true;
         }
 
         if (sendrefPayload[0][1] == true) {
-          incrRefEarn = true
+          incrRefEarn = true;
         }
-
       }
 
       console.log(addEarn, placeOrder[0][1], "HHHHHJJ");
@@ -263,7 +262,7 @@ exports.SubmitDelivery = async (req, res) => {
 
 exports.getBoughtProducts = async (req, res) => {
   try {
-    let user = req.user.email;
+    let user = req.user.emlail;
 
     let query = `SELECT PurchaseOrders.*, Products.user_wallet, Products.product_name, Products.product_images, Products.product_brand FROM PurchaseOrders JOIN Products ON PurchaseOrders.product_id = Products.id JOIN Users ON Users.email = PurchaseOrders.email WHERE Users.email = '${user}'`;
     const result = await db.sequelize.query(query);
